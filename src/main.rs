@@ -5,7 +5,7 @@ mod piece;
 use matrix::Matrix;
 
 fn main() {
-    let matrix = Matrix::b_type();
+    let matrix = Matrix::random_partial_fill();
 
     println!("{matrix}");
 }

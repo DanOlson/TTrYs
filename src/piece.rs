@@ -7,7 +7,7 @@ pub struct Point {
 }
 
 impl Point {
-    fn new(x: usize, y: usize) -> Self {
+    pub fn new(x: usize, y: usize) -> Self {
         Point { x, y }
     }
 }
@@ -289,7 +289,7 @@ pub struct Piece {
 }
 
 impl Piece {
-    fn new(shape: Shape, points: [Point; 4]) -> Self {
+    pub fn new(shape: Shape, points: [Point; 4]) -> Self {
         Self { shape, points, orientation: Orientation::One }
     }
 
@@ -297,7 +297,7 @@ impl Piece {
     // [][][]
     // []
     //
-    fn orange_ricky(origin: Point) -> Self {
+    pub fn orange_ricky(origin: Point) -> Self {
         let points = [
             Point::new(origin.x, origin.y),
             Point::new(origin.x, origin.y + 1),
@@ -311,7 +311,7 @@ impl Piece {
     // [][][]
     //     []
     //
-    fn blue_ricky(origin: Point) -> Self {
+    pub fn blue_ricky(origin: Point) -> Self {
         let points = [
             Point::new(origin.x + 2, origin.y),
             Point::new(origin.x, origin.y + 1),
@@ -325,7 +325,7 @@ impl Piece {
     // [][]
     //   [][]
     //
-    fn cleveland_z(origin: Point) -> Self {
+    pub fn cleveland_z(origin: Point) -> Self {
         let points = [
             Point::new(origin.x + 1, origin.y),
             Point::new(origin.x + 2, origin.y),
@@ -339,7 +339,7 @@ impl Piece {
     //   [][]
     // [][]
     //
-    fn rhode_island_z(origin: Point) -> Self {
+    pub fn rhode_island_z(origin: Point) -> Self {
         let points = [
             Point::new(origin.x, origin.y),
             Point::new(origin.x + 1, origin.y),
@@ -352,7 +352,7 @@ impl Piece {
     //
     // [][][][]
     //
-    fn hero(origin: Point) -> Self {
+    pub fn hero(origin: Point) -> Self {
         let points = [
             Point::new(origin.x, origin.y),
             Point::new(origin.x + 1, origin.y),
@@ -366,7 +366,7 @@ impl Piece {
     // [][][]
     //   []
     //
-    fn teewee(origin: Point) -> Self {
+    pub fn teewee(origin: Point) -> Self {
         let points = [
             Point::new(origin.x + 1, origin.y),
             Point::new(origin.x, origin.y + 1),
@@ -380,7 +380,7 @@ impl Piece {
     // [][]
     // [][]
     //
-    fn smashboy(origin: Point) -> Self {
+    pub fn smashboy(origin: Point) -> Self {
         let points = [
             Point::new(origin.x, origin.y),
             Point::new(origin.x + 1, origin.y),
