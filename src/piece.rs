@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use rand::{prelude::thread_rng, seq::SliceRandom};
 
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Copy)]
 pub struct Point {
@@ -282,6 +283,7 @@ impl Orientation {
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct Piece {
     pub shape: Shape,
     pub orientation: Orientation,
@@ -291,6 +293,30 @@ pub struct Piece {
 impl Piece {
     pub fn new(shape: Shape, points: [Point; 4]) -> Self {
         Self { shape, points, orientation: Orientation::One }
+    }
+
+    pub fn random(origin: Point) -> Self {
+        let shapes = [
+            Shape::OrangeRicky,
+            Shape::BlueRicky,
+            Shape::ClevelandZ,
+            Shape::RhodeIslandZ,
+            Shape::Hero,
+            Shape::Teewee,
+            Shape::Smashboy,
+        ];
+        let shape = shapes.choose(&mut thread_rng())
+            .copied()
+            .unwrap();
+        match shape {
+            Shape::OrangeRicky => Self::orange_ricky(origin),
+            Shape::BlueRicky => Self::blue_ricky(origin),
+            Shape::ClevelandZ => Self::cleveland_z(origin),
+            Shape::RhodeIslandZ => Self::rhode_island_z(origin),
+            Shape::Hero => Self::hero(origin),
+            Shape::Teewee => Self::teewee(origin),
+            Shape::Smashboy => Self::smashboy(origin)
+        }
     }
 
     //
@@ -492,7 +518,20 @@ mod test {
             Point::new(6, 19),
             Point::new(7, 19),
             Point::new(8, 19)
-        ])
+        ]);
+    }
+
+    #[test]
+    fn test_move_down_from_zero_orange_ricky() {
+        let origin = Point::new(6, 19);
+        let mut piece = Piece::orange_ricky(origin);
+        piece.move_down();
+        assert_eq!(piece.points, [
+            Point::new(6, 18),
+            Point::new(6, 19),
+            Point::new(7, 19),
+            Point::new(8, 19)
+        ]);
     }
 
     #[test]
