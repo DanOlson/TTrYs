@@ -29,41 +29,50 @@ impl Game {
     }
 
     pub fn on_left(&mut self) {
-        self.handle_movement(Piece::move_left);
+        self.handle_movement(Piece::project_left);
     }
 
     pub fn on_right(&mut self) {
-        self.handle_movement(Piece::move_right);
+        self.handle_movement(Piece::project_right);
     }
 
     pub fn on_down(&mut self) {
-        if self.handle_movement(Piece::move_down).is_some() {
+        if self.handle_movement(Piece::project_down).is_none() {
             self.piece_placed();
         }
     }
     pub fn on_rotate_clockwise(&mut self) {
-        self.handle_movement(Piece::rotate_clockwise);
+        self.handle_movement(Piece::project_clockwise_rotation);
     }
     pub fn on_rotate_counterclockwise(&mut self) {
-        self.handle_movement(Piece::rotate_counterclockwise);
+        self.handle_movement(Piece::project_counterclockwise_rotation);
     }
 
     pub fn on_tick(&mut self) {}
 
-    fn handle_movement(&mut self, move_piece: impl Fn(&mut Piece)) -> Option<()> {
-        let prev_piece = self.current_piece;
-        move_piece(&mut self.current_piece);
-        if self.board.apply(self.current_piece).is_some() {
+    fn handle_movement<F>(&mut self, attempt_move: F) -> Option<()>
+        where F: Fn(&Piece) -> Option<Piece>
+    {
+        let projection = attempt_move(&self.current_piece)?;
+
+        if self.board.apply(projection).is_some() {
+            self.current_piece = projection;
             Some(())
         } else {
-            self.current_piece = prev_piece;
             None
         }
     }
 
-    // Handle the placement of a piece. Clear rows, update
-    // score, etc.
-    fn piece_placed(&mut self) {}
+    // Handle the placement of a piece.
+    //  Clear rows
+    //  update score,
+    //  next piece becomes current
+    //  select new next piece
+    fn piece_placed(&mut self) {
+        self.board.settle(&self.current_piece.points);
+        self.current_piece = self.next_piece;
+        self.next_piece = Piece::random(Point::new(4, 18));
+    }
 }
 
 #[cfg(test)]
@@ -74,11 +83,9 @@ mod tests {
         piece::{Piece, Point}
     };
 
-    fn setup() -> Game {
+    fn setup(piece: Piece) -> Game {
         let mut game = Game::new(GameMode::AType);
         let mut matrix = Matrix::empty();
-        let origin = Point::new(4, 18);
-        let piece = Piece::rhode_island_z(origin);
         matrix.apply(piece).unwrap();
         game.current_piece = piece;
         game.board = matrix;
@@ -87,16 +94,16 @@ mod tests {
 
     #[test]
     fn test_on_down() {
-        let mut game = setup();
+        let origin = Point::new(4, 18);
+        let piece = Piece::rhode_island_z(origin);
+        let mut game = setup(piece);
         // assert initial piece position
         assert_eq!(game.board.get(4, 18), Some(Color::Gray));
         assert_eq!(game.board.get(5, 18), Some(Color::Gray));
         assert_eq!(game.board.get(5, 19), Some(Color::Gray));
         assert_eq!(game.board.get(6, 19), Some(Color::Gray));
 
-        println!("{:?}", game.board);
         game.on_down();
-        println!("{:?}", game.board);
 
         // assert new piece position
         assert_eq!(game.board.get(4, 17), Some(Color::Gray));
@@ -109,5 +116,109 @@ mod tests {
         assert_eq!(game.board.get(5, 18), Some(Color::Gray));
         assert_eq!(game.board.get(5, 19), Some(Color::White));
         assert_eq!(game.board.get(6, 19), Some(Color::White));
+    }
+
+    #[test]
+    fn test_on_down_to_bottom() {
+        let origin = Point::new(4, 0);
+        let piece = Piece::hero(origin);
+        let mut game = setup(piece);
+        // assert initial piece position
+        assert_eq!(game.board.get(4, 0), Some(Color::Gray));
+        assert_eq!(game.board.get(5, 0), Some(Color::Gray));
+        assert_eq!(game.board.get(6, 0), Some(Color::Gray));
+        assert_eq!(game.board.get(7, 0), Some(Color::Gray));
+
+        game.on_down();
+
+        // assert piece is settled
+        assert_eq!(game.board.get(4, 0), Some(Color::Black));
+        assert_eq!(game.board.get(5, 0), Some(Color::Black));
+        assert_eq!(game.board.get(6, 0), Some(Color::Black));
+        assert_eq!(game.board.get(7, 0), Some(Color::Black));
+    }
+
+    #[test]
+    fn test_on_left() {
+        let origin = Point::new(1, 1);
+        let piece = Piece::smashboy(origin);
+        let mut game = setup(piece);
+
+        // assert initial piece position
+        assert_eq!(game.board.get(1, 1), Some(Color::Gray));
+        assert_eq!(game.board.get(2, 1), Some(Color::Gray));
+        assert_eq!(game.board.get(1, 2), Some(Color::Gray));
+        assert_eq!(game.board.get(2, 2), Some(Color::Gray));
+
+        game.on_left();
+
+        // assert new piece position
+        assert_eq!(game.board.get(0, 1), Some(Color::Gray));
+        assert_eq!(game.board.get(1, 1), Some(Color::Gray));
+        assert_eq!(game.board.get(0, 2), Some(Color::Gray));
+        assert_eq!(game.board.get(1, 2), Some(Color::Gray));
+    }
+
+    #[test]
+    fn test_on_left_cannot_go_out_of_bounds() {
+        let origin = Point::new(0, 1);
+        let piece = Piece::smashboy(origin);
+        let mut game = setup(piece);
+
+        // assert initial piece position
+        assert_eq!(game.board.get(0, 1), Some(Color::Gray));
+        assert_eq!(game.board.get(1, 1), Some(Color::Gray));
+        assert_eq!(game.board.get(0, 2), Some(Color::Gray));
+        assert_eq!(game.board.get(1, 2), Some(Color::Gray));
+
+        game.on_left();
+
+        // assert piece position is unchanged
+        assert_eq!(game.board.get(0, 1), Some(Color::Gray));
+        assert_eq!(game.board.get(1, 1), Some(Color::Gray));
+        assert_eq!(game.board.get(0, 2), Some(Color::Gray));
+        assert_eq!(game.board.get(1, 2), Some(Color::Gray));
+    }
+
+    #[test]
+    fn test_on_right() {
+        let origin = Point::new(7, 1);
+        let piece = Piece::smashboy(origin);
+        let mut game = setup(piece);
+
+        // assert initial piece position
+        assert_eq!(game.board.get(7, 1), Some(Color::Gray));
+        assert_eq!(game.board.get(8, 1), Some(Color::Gray));
+        assert_eq!(game.board.get(7, 2), Some(Color::Gray));
+        assert_eq!(game.board.get(8, 2), Some(Color::Gray));
+
+        game.on_right();
+
+        // assert new piece position
+        assert_eq!(game.board.get(8, 1), Some(Color::Gray));
+        assert_eq!(game.board.get(9, 1), Some(Color::Gray));
+        assert_eq!(game.board.get(8, 2), Some(Color::Gray));
+        assert_eq!(game.board.get(9, 2), Some(Color::Gray));
+    }
+
+    #[test]
+    fn test_on_right_cannot_go_out_of_bounds() {
+        let origin = Point::new(8, 1);
+        let piece = Piece::smashboy(origin);
+        let mut game = setup(piece);
+
+        // assert new piece position
+        assert_eq!(game.board.get(8, 1), Some(Color::Gray));
+        assert_eq!(game.board.get(9, 1), Some(Color::Gray));
+        assert_eq!(game.board.get(8, 2), Some(Color::Gray));
+        assert_eq!(game.board.get(9, 2), Some(Color::Gray));
+
+        game.on_right();
+
+        // assert position is unchanged
+        assert_eq!(game.board.get(8, 1), Some(Color::Gray));
+        assert_eq!(game.board.get(9, 1), Some(Color::Gray));
+        assert_eq!(game.board.get(8, 2), Some(Color::Gray));
+        assert_eq!(game.board.get(9, 2), Some(Color::Gray));
     }
 }

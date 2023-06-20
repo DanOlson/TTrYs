@@ -422,10 +422,31 @@ impl Piece {
             .for_each(|p| p.x -= 1);
     }
 
+    pub fn project_left(&self) -> Option<Piece> {
+        if self.points.iter().any(|p| p.x == 0) { return None }
+        let points = self.map_points(|p| Point::new(p.x - 1, p.y));
+        Some(Piece {
+            points,
+            shape: self.shape,
+            orientation: self.orientation
+        })
+    }
+
     pub fn move_right(&mut self) {
         self.points
             .iter_mut()
             .for_each(|p| p.x += 1)
+    }
+
+    pub fn project_right(&self) -> Option<Piece> {
+        // todo: remove hard-coding of max width.
+        if self.points.iter().any(|p| p.x + 1 > 9) { return None }
+        let points = self.map_points(|p| Point::new(p.x + 1, p.y));
+        Some(Piece {
+            points,
+            shape: self.shape,
+            orientation: self.orientation
+        })
     }
 
     pub fn move_down(&mut self) {
@@ -434,12 +455,40 @@ impl Piece {
             .for_each(|p| p.y -= 1)
     }
 
+    pub fn project_down(&self) -> Option<Piece> {
+        if self.points.iter().any(|p| p.y == 0) { return None }
+        let points = self.map_points(|p| Point::new(p.x, p.y - 1));
+        Some(Piece::new(self.shape, points))
+    }
+
+    fn map_points<F>(&self, f: F) -> [Point; 4]
+        where F: Fn(&Point) -> Point
+    {
+        self.points
+            .iter()
+            .map(f)
+            .collect::<Vec<Point>>()
+            .as_slice()
+            .try_into()
+            .unwrap()
+    }
+
     pub fn rotate_clockwise(&mut self) {
         self.rotate(self.orientation.next());
     }
 
+    // todo: implement this.
+    pub fn project_clockwise_rotation(&self) -> Option<Piece> {
+        Some(*self)
+    }
+
     pub fn rotate_counterclockwise(&mut self) {
         self.rotate(self.orientation.prev());
+    }
+
+    // todo: implement this.
+    pub fn project_counterclockwise_rotation(&self) -> Option<Piece> {
+        Some(*self)
     }
 
     fn rotate(&mut self, next_orientation: Orientation) {
