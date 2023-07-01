@@ -1,5 +1,6 @@
 use crate::piece::{Piece, Point};
-use crate::matrix::Matrix;
+use crate::matrix::{Matrix, Color};
+use crate::rotate;
 
 pub enum GameMode {
     AType,
@@ -7,7 +8,7 @@ pub enum GameMode {
 }
 
 pub struct Game {
-    pub board: Matrix,
+    pub board: Matrix<Color>,
     pub current_piece: Piece,
     pub next_piece: Piece,
     pub score: usize,

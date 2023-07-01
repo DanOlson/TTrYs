@@ -13,19 +13,54 @@ pub enum Color {
 }
 
 #[derive(PartialEq)]
-pub struct Matrix {
-    pub rows: [[Color; WIDTH]; HEIGHT]
+pub struct Matrix<T> {
+    pub rows: Vec<Vec<T>>,
+    // pub rows: [[T; WIDTH]; HEIGHT]
 }
 
-impl Matrix {
+impl <T: Copy> Matrix<T> {
+    pub fn new(width: usize, height: usize, initial_value: T) -> Self
+        where T: Copy
+    {
+        let row = vec![initial_value; width];
+        let rows = vec![row; height];
+        Self { rows }
+    }
+
+    pub fn square(length: usize, initial_value: T) -> Self
+        where T: Copy
+    {
+        Self::new(length, length, initial_value)
+    }
+
+    pub fn get(&self, x: usize, y: usize) -> Option<T> {
+        Some(*self.rows.get(y)?.get(x)?)
+    }
+
+    pub fn set(&mut self, x: usize, y: usize, val: T) -> Option<T> {
+        let mut row = self.rows.get(y)?.to_owned();
+        let prev = *row.get(x)?;
+        row[x] = val;
+        self.rows[y] = row.to_vec();
+        Some(prev)
+    }
+
+    pub fn width(&self) -> usize {
+        self.rows[0].len()
+    }
+
+    pub fn height(&self) -> usize {
+        self.rows.len()
+    }
+}
+
+impl Matrix<Color> {
     pub fn empty() -> Self {
-        Matrix {
-            rows: [EMPTY_ROW; HEIGHT]
-        }
+        Matrix::new(WIDTH, HEIGHT, Color::White)
     }
 
     pub fn random_partial_fill() -> Self {
-        let mut rows = [EMPTY_ROW; HEIGHT];
+        let mut rows = vec![Vec::from(EMPTY_ROW); HEIGHT];
         (0..HEIGHT).for_each(|i| {
             if i > HEIGHT - 6 {
                 rows[i] = Self::random_row();
@@ -35,31 +70,21 @@ impl Matrix {
         Matrix { rows }
     }
 
-    pub fn get(&self, x: usize, y: usize) -> Option<Color> {
-        Some(*self.rows.get(y)?.get(x)?)
-    }
-
-    pub fn set(&mut self, x: usize, y: usize, color: Color) -> Option<Color> {
-        let mut row = *self.rows.get(y)?;
-        let prev = *row.get(x)?;
-        row[x] = color;
-        self.rows[y] = row;
-        Some(prev)
+    fn random_row() -> Vec<Color> {
+        let mut row = vec![Color::White; WIDTH];
+        row.iter_mut().take(WIDTH).for_each(|i| {
+            if thread_rng().gen_bool(1.0 / 3.0) { *i = Color::Black }
+        });
+        row
     }
 
     fn unset(&mut self, x: usize, y: usize) {
-        let mut row = *self.rows.get(y).unwrap();
+        let mut row = self.rows.get(y).unwrap().to_owned();
         row[x] = Color::White;
         self.rows[y] = row;
     }
 
-    pub fn remove(&mut self, piece: Piece) {
-        piece.points
-            .iter()
-            .for_each(|p| self.unset(p.x, p.y));
-    }
-
-    pub fn apply(&mut self, piece: Piece) -> Option<&Matrix> {
+    pub fn apply(&mut self, piece: Piece) -> Option<&Matrix<Color>> {
         if !self.can_apply(&piece.points) { return None }
 
         let greys = self.rows
@@ -82,7 +107,7 @@ impl Matrix {
         Some(self)
     }
 
-    pub fn settle(&mut self, points: &[Point]) -> Option<&Matrix> {
+    pub fn settle(&mut self, points: &[Point]) -> Option<&Matrix<Color>> {
         if !self.can_apply(points) { return None }
 
         points.iter()
@@ -95,15 +120,13 @@ impl Matrix {
             .iter()
             .all(|p| self.get(p.x, p.y).ne(&Some(Color::Black)))
     }
-
-    fn random_row() -> [Color; WIDTH] {
-        let mut row = [Color::White; WIDTH];
-        row.iter_mut().take(WIDTH).for_each(|i| {
-            if thread_rng().gen_bool(1.0 / 3.0) { *i = Color::Black }
-        });
-        row
-    }
 }
+
+// impl Iterator for Matrix {
+//     type Item = Color;
+
+//     fn next(&mut self) -> Option<Self::Item> { todo!() }
+// }
 
 // +--+--+--+--+--+--+--+--+--+--+--+
 fn horizontal_border() -> String {
@@ -114,13 +137,13 @@ fn horizontal_border() -> String {
     hz_border
 }
 
-impl std::fmt::Debug for Matrix {
+impl std::fmt::Debug for Matrix<Color> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(&self, f)
     }
 }
 
-impl std::fmt::Display for Matrix {
+impl std::fmt::Display for Matrix<Color> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut out = format!("\r\n{}", horizontal_border());
 

@@ -491,6 +491,33 @@ impl Piece {
         Some(*self)
     }
 
+    // Return a tuple of points representing the lower left
+    // and upper right points of the piece.
+    pub fn bounds(&self) -> (Point, Point) {
+        let min_x = self
+            .points
+            .iter()
+            .min_by_key(|p| p.x)
+            .unwrap().x;
+        let max_x = self
+            .points
+            .iter()
+            .max_by_key(|p| p.x)
+            .unwrap().x;
+        let min_y = self
+            .points
+            .iter()
+            .min_by_key(|p| p.y)
+            .unwrap().y;
+        let max_y = self
+            .points
+            .iter()
+            .max_by_key(|p| p.y)
+            .unwrap().y;
+
+        (Point::new(min_x, min_y), Point::new(max_x, max_y))
+    }
+
     fn rotate(&mut self, next_orientation: Orientation) {
         let transition = self.shape.transition(
             self.orientation,
@@ -518,6 +545,46 @@ impl Piece {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn test_bounds_orange_ricky() {
+        let origin = Point::new(3, 2);
+        let piece = Piece::orange_ricky(origin);
+        let (lower_left, upper_right) = piece.bounds();
+
+        assert_eq!(lower_left, Point::new(3, 2));
+        assert_eq!(upper_right, Point::new(5, 3));
+    }
+
+    #[test]
+    fn test_bounds_blue_ricky() {
+        let origin = Point::new(1, 1);
+        let piece = Piece::blue_ricky(origin);
+        let (lower_left, upper_right) = piece.bounds();
+
+        assert_eq!(lower_left, Point::new(1, 1));
+        assert_eq!(upper_right, Point::new(3, 2));
+    }
+
+    #[test]
+    fn test_bounds_cleveland_z() {
+        let origin = Point::new(1, 1);
+        let piece = Piece::cleveland_z(origin);
+        let (lower_left, upper_right) = piece.bounds();
+
+        assert_eq!(lower_left, Point::new(1, 1));
+        assert_eq!(upper_right, Point::new(3, 2));
+    }
+
+    #[test]
+    fn test_bounds_rhode_island_z() {
+        let origin = Point::new(1, 1);
+        let piece = Piece::rhode_island_z(origin);
+        let (lower_left, upper_right) = piece.bounds();
+
+        assert_eq!(lower_left, Point::new(1, 1));
+        assert_eq!(upper_right, Point::new(3, 2));
+    }
 
     #[test]
     fn test_points_orange_ricky() {
