@@ -130,9 +130,9 @@ impl Matrix<Color> {
 
 // +--+--+--+--+--+--+--+--+--+--+--+
 fn horizontal_border() -> String {
-    let mut hz_border = String::from("+");
+    let mut hz_border = String::from(".");
     for _i in 0..WIDTH {
-        hz_border.push_str("  +");
+        hz_border.push_str("  .");
     }
     hz_border
 }

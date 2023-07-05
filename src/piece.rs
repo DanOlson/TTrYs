@@ -1,5 +1,5 @@
-use std::cmp::Ordering;
 use rand::{prelude::thread_rng, seq::SliceRandom};
+use crate::rotate;
 
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Copy)]
 pub struct Point {
@@ -22,237 +22,6 @@ pub enum Shape {
     Hero,
     Teewee,
     Smashboy,
-}
-
-type PieceTransition = Box<dyn FnMut((usize, &mut Point))>;
-
-impl Shape {
-    pub fn transition(&self, from: Orientation, to: Orientation) -> PieceTransition {
-        match (self, from, to) {
-            // OrangeRicky
-            (Shape::OrangeRicky, Orientation::One, Orientation::Two) => Box::new(|(i, p)| {
-                if i == 0 { p.y += 2 }
-                if i == 1 { p.x += 1; p.y += 1 }
-                if i == 3 { p.x -= 1; p.y -= 1 }
-            }),
-            (Shape::OrangeRicky, Orientation::Two, Orientation::Three) => Box::new(|(i, p)| {
-                if i == 1 { p.x -= 1; p.y -= 1 }
-                if i == 2 { p.x += 2; p.y -= 1 }
-                if i == 3 { p.x += 1; p.y -= 2 }
-            }),
-            (Shape::OrangeRicky, Orientation::Three, Orientation::Four) => Box::new(|(i, p)| {
-                if i == 0 { p.x += 1; p.y += 2 }
-                if i == 3 { p.x -= 1 }
-            }),
-            (Shape::OrangeRicky, Orientation::Four, Orientation::One) => Box::new(|(i, p)| {
-                if i == 0 { p.x -= 1; p.y += 1 }
-                if i == 1 { p.x -= 2 }
-                if i == 3 { p.x += 1; p.y -= 1 }
-            }),
-            (Shape::OrangeRicky, Orientation::One, Orientation::Four) => Box::new(|(i, p)| {
-                if i == 0 { p.x += 2 }
-                if i == 1 { p.x += 1; p.y -= 1 }
-                if i == 3 { p.x -= 1; p.y += 1 }
-            }),
-            (Shape::OrangeRicky, Orientation::Four, Orientation::Three) => Box::new(|(i, p)| {
-                if i == 0 { p.x -= 1 }
-                if i == 2 { p.y -= 1 }
-                if i == 3 { p.x += 1; p.y -= 1 }
-            }),
-            (Shape::OrangeRicky, Orientation::Three, Orientation::Two) => Box::new(|(i, p)| {
-                if i == 0 { p.y += 2 }
-                if i == 2 { p.x -= 1; p.y += 1 }
-                if i == 3 { p.x -= 1; p.y += 1 }
-            }),
-            (Shape::OrangeRicky, Orientation::Two, Orientation::One) => Box::new(|(i, p)| {
-                if i == 0 { p.x -= 1; p.y += 1 }
-                if i == 2 { p.y -= 2 }
-                if i == 3 { p.x += 1; p.y -= 1 }
-            }),
-
-            // BlueRicky
-            (Shape::BlueRicky, Orientation::One, Orientation::Two) => Box::new(|(i, p)| {
-                if i == 0 { p.x -= 2 }
-                if i == 1 { p.x += 1; p.y -= 1 }
-                if i == 3 { p.x -= 1; p.y += 1 }
-            }),
-            (Shape::BlueRicky, Orientation::Two, Orientation::Three) => Box::new(|(i, p)| {
-                if i == 2 { p.x += 1; p.y -= 1 }
-                if i == 3 { p.x -= 1; p.y -= 1 }
-            }),
-            (Shape::BlueRicky, Orientation::Three, Orientation::Four) => Box::new(|(i, p)| {
-                if i == 0 { p.x += 1; p.y += 1 }
-                if i == 2 { p.y += 2 }
-                if i == 3 { p.x += 1; p.y += 1 }
-            }),
-            (Shape::BlueRicky, Orientation::Four, Orientation::One) => Box::new(|(i, p)| {
-                if i == 0 { p.x -= 1; p.y += 1 }
-                if i == 2 { p.x += 1; p.y -= 1 }
-                if i == 3 { p.y -= 2 }
-            }),
-            (Shape::BlueRicky, Orientation::One, Orientation::Four) => Box::new(|(i, p)| {
-                if i == 0 { p.y += 2 }
-                if i == 1 { p.x += 1; p.y -= 1 }
-                if i == 3 { p.x -= 1; p.y += 1 }
-            }),
-            (Shape::BlueRicky, Orientation::Four, Orientation::Three) => Box::new(|(i, p)| {
-                if i == 1 { p.x -= 1; p.y -= 1 }
-                if i == 2 { p.x -= 1; p.y -= 1 }
-                if i == 3 { p.y -= 2 }
-            }),
-            (Shape::BlueRicky, Orientation::Three, Orientation::Two) => Box::new(|(i, p)| {
-                if i == 2 { p.x -= 1; p.y += 1 }
-                if i == 3 { p.x += 1; p.y += 1 }
-            }),
-            (Shape::BlueRicky, Orientation::Two, Orientation::One) => Box::new(|(i, p)| {
-                if i == 0 { p.y += 1 }
-                if i == 1 { p.x += 1 }
-                if i == 3 { p.x += 1; p.y -= 1 }
-            }),
-
-            // Cleveland Z
-            (Shape::ClevelandZ, Orientation::One, Orientation::Two) => Box::new(|(i, p)| {
-                if i == 1 { p.y += 2 }
-                if i == 2 { p.x += 2 }
-            }),
-            (Shape::ClevelandZ, Orientation::Two, Orientation::Three) => Box::new(|(i, p)| {
-                if i == 2 { p.x -= 2 }
-                if i == 3 { p.y -= 2 }
-            }),
-            (Shape::ClevelandZ, Orientation::Three, Orientation::Four) => Box::new(|(i, p)| {
-                if i == 1 { p.y += 2 }
-                if i == 2 { p.x += 2 }
-            }),
-            (Shape::ClevelandZ, Orientation::Four, Orientation::One) => Box::new(|(i, p)| {
-                if i == 2 { p.x -= 2 }
-                if i == 3 { p.y -= 2 }
-            }),
-            (Shape::ClevelandZ, Orientation::One, Orientation::Four) => Box::new(|(i, p)| {
-                if i == 1 { p.y += 2 }
-                if i == 2 { p.x += 2 }
-            }),
-            (Shape::ClevelandZ, Orientation::Four, Orientation::Three) => Box::new(|(i, p)| {
-                if i == 2 { p.x -= 2 }
-                if i == 3 { p.y -= 2 }
-            }),
-            (Shape::ClevelandZ, Orientation::Three, Orientation::Two) => Box::new(|(i, p)| {
-                if i == 1 { p.y += 2 }
-                if i == 2 { p.x += 2 }
-            }),
-            (Shape::ClevelandZ, Orientation::Two, Orientation::One) => Box::new(|(i, p)| {
-                if i == 2 { p.x -= 2 }
-                if i == 3 { p.y -= 2 }
-            }),
-
-            // RhodeIslandZ
-            (Shape::RhodeIslandZ, Orientation::One, Orientation::Two) => Box::new(|(i, p)| {
-                if i == 0 { p.y += 2 }
-                if i == 3 { p.x -= 2 }
-            }),
-            (Shape::RhodeIslandZ, Orientation::Two, Orientation::Three) => Box::new(|(i, p)| {
-                if i == 1 { p.x += 2 }
-                if i == 3 { p.y -= 2 }
-            }),
-            (Shape::RhodeIslandZ, Orientation::Three, Orientation::Four) => Box::new(|(i, p)| {
-                if i == 0 { p.y += 2 }
-                if i == 3 { p.x -= 2 }
-            }),
-            (Shape::RhodeIslandZ, Orientation::Four, Orientation::One) => Box::new(|(i, p)| {
-                if i == 1 { p.x += 2 }
-                if i == 3 { p.y -= 2 }
-            }),
-            (Shape::RhodeIslandZ, Orientation::One, Orientation::Four) => Box::new(|(i, p)| {
-                if i == 0 { p.y += 2 }
-                if i == 3 { p.x -= 2 }
-            }),
-            (Shape::RhodeIslandZ, Orientation::Four, Orientation::Three) => Box::new(|(i, p)| {
-                if i == 1 { p.x += 2 }
-                if i == 3 { p.y -= 2 }
-            }),
-            (Shape::RhodeIslandZ, Orientation::Three, Orientation::Two) => Box::new(|(i, p)| {
-                if i == 0 { p.y += 2 }
-                if i == 3 { p.x -= 2 }
-            }),
-            (Shape::RhodeIslandZ, Orientation::Two, Orientation::One) => Box::new(|(i, p)| {
-                if i == 1 { p.x += 2 }
-                if i == 3 { p.y -= 2 }
-            }),
-
-            // Hero
-            (Shape::Hero, Orientation::One, Orientation::Two) =>  Box::new(|(i, p)| {
-                if i == 0 { p.x += 2; p.y += 2 }
-                if i == 1 { p.x += 1; p.y += 1 }
-                if i == 3 { p.x -= 1; p.y -= 1 }
-            }),
-            (Shape::Hero, Orientation::Two, Orientation::Three) =>  Box::new(|(i, p)| {
-                if i == 0 { p.x += 1; p.y += 1 }
-                if i == 2 { p.x -= 1; p.y -= 1 }
-                if i == 3 { p.x -= 2; p.y -= 2 }
-            }),
-            (Shape::Hero, Orientation::Three, Orientation::Four) =>  Box::new(|(i, p)| {
-                if i == 0 { p.x += 2; p.y += 2 }
-                if i == 1 { p.x += 1; p.y += 1 }
-                if i == 3 { p.x -= 1; p.y -= 1 }
-            }),
-            (Shape::Hero, Orientation::Four, Orientation::One) =>  Box::new(|(i, p)| {
-                if i == 0 { p.x += 1; p.y += 1 }
-                if i == 2 { p.x -= 1; p.y -= 1 }
-                if i == 3 { p.x -= 2; p.y -= 2 }
-            }),
-            (Shape::Hero, Orientation::One, Orientation::Four) =>  Box::new(|(i, p)| {
-                if i == 0 { p.x += 2; p.y += 2 }
-                if i == 1 { p.x += 1; p.y += 1 }
-                if i == 3 { p.x -= 1; p.y -= 1 }
-            }),
-            (Shape::Hero, Orientation::Four, Orientation::Three) =>  Box::new(|(i, p)| {
-                if i == 0 { p.x += 1; p.y += 1 }
-                if i == 2 { p.x -= 1; p.y -= 1 }
-                if i == 3 { p.x -= 2; p.y -= 2 }
-            }),
-            (Shape::Hero, Orientation::Three, Orientation::Two) =>  Box::new(|(i, p)| {
-                if i == 0 { p.x += 2; p.y += 2 }
-                if i == 1 { p.x += 1; p.y += 1 }
-                if i == 3 { p.x -= 1; p.y -= 1 }
-            }),
-            (Shape::Hero, Orientation::Two, Orientation::One) =>  Box::new(|(i, p)| {
-                if i == 0 { p.x += 1; p.y += 1 }
-                if i == 2 { p.x -= 1; p.y -= 1 }
-                if i == 3 { p.x -= 2; p.y -= 2 }
-            }),
-
-            // Teewee
-            (Shape::Teewee, Orientation::One, Orientation::Two) => Box::new(|(i, p)| {
-                if i == 3 { p.x -= 1; p.y += 1 }
-            }),
-            (Shape::Teewee, Orientation::Two, Orientation::Three) => Box::new(|(i, p)| {
-                if i == 0 { p.x += 1; p.y += 1 }
-            }),
-            (Shape::Teewee, Orientation::Three, Orientation::Four) => Box::new(|(i, p)| {
-                if i == 0 { p.x += 1; p.y -= 1 }
-            }),
-            (Shape::Teewee, Orientation::Four, Orientation::One) => Box::new(|(i, p)| {
-                if i == 3 { p.x -= 1; p.y -= 1 }
-            }),
-            (Shape::Teewee, Orientation::One, Orientation::Four) => Box::new(|(i, p)| {
-                if i == 1 { p.x += 1; p.y += 1 }
-            }),
-            (Shape::Teewee, Orientation::Four, Orientation::Three) => Box::new(|(i, p)| {
-                if i == 0 { p.x -= 1; p.y += 1 }
-            }),
-            (Shape::Teewee, Orientation::Three, Orientation::Two) => Box::new(|(i, p)| {
-                if i == 2 { p.x -= 1; p.y -= 1 }
-            }),
-            (Shape::Teewee, Orientation::Two, Orientation::One) => Box::new(|(i, p)| {
-                if i == 3 { p.x += 1; p.y -= 1 }
-            }),
-
-            // Smashboy
-            (Shape::Smashboy, _, _) => Box::new(|(_i, _p)| {}),
-
-            _ => panic!()
-        }
-
-    }
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -416,32 +185,25 @@ impl Piece {
         Self::new(Shape::Smashboy, points)
     }
 
-    pub fn move_left(&mut self) {
-        self.points
-            .iter_mut()
-            .for_each(|p| p.x -= 1);
-    }
-
     pub fn project_left(&self) -> Option<Piece> {
-        if self.points.iter().any(|p| p.x == 0) { return None }
-        let points = self.map_points(|p| Point::new(p.x - 1, p.y));
+        let points = self.map_points(|p| {
+            let point = Point::new(p.x.checked_sub(1)?, p.y);
+            Some(point)
+        })?;
         Some(Piece {
             points,
             shape: self.shape,
             orientation: self.orientation
         })
-    }
-
-    pub fn move_right(&mut self) {
-        self.points
-            .iter_mut()
-            .for_each(|p| p.x += 1)
     }
 
     pub fn project_right(&self) -> Option<Piece> {
-        // todo: remove hard-coding of max width.
-        if self.points.iter().any(|p| p.x + 1 > 9) { return None }
-        let points = self.map_points(|p| Point::new(p.x + 1, p.y));
+        let points = self.map_points(|p| {
+            let new_x = p.x + 1;
+            // todo: remove hard-coded knowledge of board width
+            if new_x > 9 { return None }
+            Some(Point::new(new_x, p.y))
+        })?;
         Some(Piece {
             points,
             shape: self.shape,
@@ -449,46 +211,24 @@ impl Piece {
         })
     }
 
-    pub fn move_down(&mut self) {
-        self.points
-            .iter_mut()
-            .for_each(|p| p.y -= 1)
-    }
-
     pub fn project_down(&self) -> Option<Piece> {
-        if self.points.iter().any(|p| p.y == 0) { return None }
-        let points = self.map_points(|p| Point::new(p.x, p.y - 1));
-        Some(Piece::new(self.shape, points))
+        let points = self.map_points(|p| {
+            let point = Point::new(p.x, p.y.checked_sub(1)?);
+            Some(point)
+        })?;
+        Some(Piece {
+            points,
+            shape: self.shape,
+            orientation: self.orientation
+        })
     }
 
-    fn map_points<F>(&self, f: F) -> [Point; 4]
-        where F: Fn(&Point) -> Point
-    {
-        self.points
-            .iter()
-            .map(f)
-            .collect::<Vec<Point>>()
-            .as_slice()
-            .try_into()
-            .unwrap()
-    }
-
-    pub fn rotate_clockwise(&mut self) {
-        self.rotate(self.orientation.next());
-    }
-
-    // todo: implement this.
     pub fn project_clockwise_rotation(&self) -> Option<Piece> {
-        Some(*self)
+        rotate::rotate_clockwise(self)
     }
 
-    pub fn rotate_counterclockwise(&mut self) {
-        self.rotate(self.orientation.prev());
-    }
-
-    // todo: implement this.
     pub fn project_counterclockwise_rotation(&self) -> Option<Piece> {
-        Some(*self)
+        rotate::rotate_counterclockwise(self)
     }
 
     // Return a tuple of points representing the lower left
@@ -518,27 +258,18 @@ impl Piece {
         (Point::new(min_x, min_y), Point::new(max_x, max_y))
     }
 
-    fn rotate(&mut self, next_orientation: Orientation) {
-        let transition = self.shape.transition(
-            self.orientation,
-            next_orientation
-        );
-        self.points
-            .iter_mut()
-            .enumerate()
-            .for_each(transition);
-        self.sort_points();
-        self.orientation = next_orientation;
-    }
-
-    fn sort_points(&mut self) {
-        self.points.sort_by(|a, b| {
-            let ordering = a.y.cmp(&b.y);
-            match ordering {
-                Ordering::Equal => a.x.cmp(&b.x),
-                _ => ordering
-            }
-        })
+    fn map_points<F>(&self, f: F) -> Option<[Point; 4]>
+        where F: Fn(&Point) -> Option<Point>
+    {
+        let mut pts: Vec<Point> = vec![];
+        for p in self.points.iter() {
+            pts.push(f(p)?)
+        }
+        let points: [Point; 4] = pts
+            .as_slice()
+            .try_into()
+            .unwrap();
+        Some(points)
     }
 }
 
@@ -601,8 +332,7 @@ mod test {
     #[test]
     fn test_move_left_orange_ricky() {
         let origin = Point::new(6, 19);
-        let mut piece = Piece::orange_ricky(origin);
-        piece.move_left();
+        let piece = Piece::orange_ricky(origin).project_left().unwrap();
         assert_eq!(piece.points, [
             Point::new(5, 19),
             Point::new(5, 20),
@@ -614,8 +344,7 @@ mod test {
     #[test]
     fn test_move_right_orange_ricky() {
         let origin = Point::new(6, 19);
-        let mut piece = Piece::orange_ricky(origin);
-        piece.move_right();
+        let piece = Piece::orange_ricky(origin).project_right().unwrap();
         assert_eq!(piece.points, [
             Point::new(7, 19),
             Point::new(7, 20),
@@ -627,8 +356,7 @@ mod test {
     #[test]
     fn test_move_down_orange_ricky() {
         let origin = Point::new(6, 19);
-        let mut piece = Piece::orange_ricky(origin);
-        piece.move_down();
+        let piece = Piece::orange_ricky(origin).project_down().unwrap();
         assert_eq!(piece.points, [
             Point::new(6, 18),
             Point::new(6, 19),
@@ -640,81 +368,12 @@ mod test {
     #[test]
     fn test_move_down_from_zero_orange_ricky() {
         let origin = Point::new(6, 19);
-        let mut piece = Piece::orange_ricky(origin);
-        piece.move_down();
+        let piece = Piece::orange_ricky(origin).project_down().unwrap();
         assert_eq!(piece.points, [
             Point::new(6, 18),
             Point::new(6, 19),
             Point::new(7, 19),
             Point::new(8, 19)
-        ]);
-    }
-
-    #[test]
-    fn test_orange_ricky_rotate_clockwise() {
-        let origin = Point::new(6, 18);
-        let mut piece = Piece::orange_ricky(origin);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(7, 18),
-            Point::new(7, 19),
-            Point::new(6, 20),
-            Point::new(7, 20),
-        ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(7, 18),
-            Point::new(8, 18),
-            Point::new(8, 19)
-        ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(7, 18),
-            Point::new(8, 18),
-            Point::new(7, 19),
-            Point::new(7, 20),
-            ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(6, 19),
-            Point::new(7, 19),
-            Point::new(8, 19),
-        ]);
-    }
-
-    #[test]
-    fn test_orange_ricky_rotate_counterclockwise() {
-        let origin = Point::new(6, 18);
-        let mut piece = Piece::orange_ricky(origin);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(7, 18),
-            Point::new(8, 18),
-            Point::new(7, 19),
-            Point::new(7, 20),
-        ]);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(7, 18),
-            Point::new(8, 18),
-            Point::new(8, 19)
-        ]);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(7, 18),
-            Point::new(7, 19),
-            Point::new(6, 20),
-            Point::new(7, 20),
-        ]);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(6, 19),
-            Point::new(7, 19),
-            Point::new(8, 19),
         ]);
     }
 
@@ -731,145 +390,9 @@ mod test {
     }
 
     #[test]
-    fn test_blue_ricky_rotate_clockwise() {
-        let origin = Point::new(5, 18);
-        let mut piece = Piece::blue_ricky(origin);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(5, 18),
-            Point::new(6, 18),
-            Point::new(6, 19),
-            Point::new(6, 20)
-        ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(5, 18),
-            Point::new(6, 18),
-            Point::new(7, 18),
-            Point::new(5, 19)
-        ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(6, 19),
-            Point::new(6, 20),
-            Point::new(7, 20)
-        ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(7, 18),
-            Point::new(5, 19),
-            Point::new(6, 19),
-            Point::new(7, 19)
-        ]);
-    }
-
-    #[test]
-    fn test_blue_ricky_rotate_counterclockwise() {
-        let origin = Point::new(5, 18);
-        let mut piece = Piece::blue_ricky(origin);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(6, 19),
-            Point::new(6, 20),
-            Point::new(7, 20),
-        ]);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(5, 18),
-            Point::new(6, 18),
-            Point::new(7, 18),
-            Point::new(5, 19)
-        ]);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(5, 18),
-            Point::new(6, 18),
-            Point::new(6, 19),
-            Point::new(6, 20)
-        ]);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(7, 18),
-            Point::new(5, 19),
-            Point::new(6, 19),
-            Point::new(7, 19)
-        ]);
-    }
-
-    #[test]
     fn test_points_cleveland_z() {
         let origin = Point::new(5, 18);
         let piece = Piece::cleveland_z(origin);
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(7, 18),
-            Point::new(5, 19),
-            Point::new(6, 19)
-        ]);
-    }
-
-    #[test]
-    fn test_cleveland_z_rotate_clockwise() {
-        let origin = Point::new(5, 18);
-        let mut piece = Piece::cleveland_z(origin);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(6, 19),
-            Point::new(7, 19),
-            Point::new(7, 20)
-        ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(7, 18),
-            Point::new(5, 19),
-            Point::new(6, 19)
-        ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(6, 19),
-            Point::new(7, 19),
-            Point::new(7, 20)
-        ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(7, 18),
-            Point::new(5, 19),
-            Point::new(6, 19)
-        ]);
-    }
-
-    #[test]
-    fn test_cleveland_z_rotate_counterclockwise() {
-        let origin = Point::new(5, 18);
-        let mut piece = Piece::cleveland_z(origin);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(6, 19),
-            Point::new(7, 19),
-            Point::new(7, 20)
-        ]);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(7, 18),
-            Point::new(5, 19),
-            Point::new(6, 19)
-        ]);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(6, 19),
-            Point::new(7, 19),
-            Point::new(7, 20)
-        ]);
-        piece.rotate_counterclockwise();
         assert_eq!(piece.points, [
             Point::new(6, 18),
             Point::new(7, 18),
@@ -891,145 +414,9 @@ mod test {
     }
 
     #[test]
-    fn test_rhode_island_z_rotate_clockwise() {
-        let origin = Point::new(5, 18);
-        let mut piece = Piece::rhode_island_z(origin);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(5, 19),
-            Point::new(6, 19),
-            Point::new(5, 20)
-        ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(5, 18),
-            Point::new(6, 18),
-            Point::new(6, 19),
-            Point::new(7, 19)
-        ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(5, 19),
-            Point::new(6, 19),
-            Point::new(5, 20)
-        ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(5, 18),
-            Point::new(6, 18),
-            Point::new(6, 19),
-            Point::new(7, 19)
-        ]);
-    }
-
-    #[test]
-    fn test_rhode_island_z_rotate_counterclockwise() {
-        let origin = Point::new(5, 18);
-        let mut piece = Piece::rhode_island_z(origin);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(5, 19),
-            Point::new(6, 19),
-            Point::new(5, 20)
-        ]);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(5, 18),
-            Point::new(6, 18),
-            Point::new(6, 19),
-            Point::new(7, 19)
-        ]);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(5, 19),
-            Point::new(6, 19),
-            Point::new(5, 20)
-        ]);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(5, 18),
-            Point::new(6, 18),
-            Point::new(6, 19),
-            Point::new(7, 19)
-        ]);
-    }
-
-    #[test]
     fn test_points_hero() {
         let origin = Point::new(5, 18);
         let piece = Piece::hero(origin);
-        assert_eq!(piece.points, [
-            Point::new(5, 18),
-            Point::new(6, 18),
-            Point::new(7, 18),
-            Point::new(8, 18)
-        ]);
-    }
-
-    #[test]
-    fn test_hero_rotate_clockwise() {
-        let origin = Point::new(5, 18);
-        let mut piece = Piece::hero(origin);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(7, 17),
-            Point::new(7, 18),
-            Point::new(7, 19),
-            Point::new(7, 20)
-        ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(5, 18),
-            Point::new(6, 18),
-            Point::new(7, 18),
-            Point::new(8, 18)
-        ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(7, 17),
-            Point::new(7, 18),
-            Point::new(7, 19),
-            Point::new(7, 20)
-        ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(5, 18),
-            Point::new(6, 18),
-            Point::new(7, 18),
-            Point::new(8, 18)
-        ]);
-    }
-
-    #[test]
-    fn test_hero_rotate_counterclockwise() {
-        let origin = Point::new(5, 18);
-        let mut piece = Piece::hero(origin);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(7, 17),
-            Point::new(7, 18),
-            Point::new(7, 19),
-            Point::new(7, 20)
-        ]);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(5, 18),
-            Point::new(6, 18),
-            Point::new(7, 18),
-            Point::new(8, 18)
-        ]);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(7, 17),
-            Point::new(7, 18),
-            Point::new(7, 19),
-            Point::new(7, 20)
-        ]);
-        piece.rotate_counterclockwise();
         assert_eq!(piece.points, [
             Point::new(5, 18),
             Point::new(6, 18),
@@ -1051,145 +438,9 @@ mod test {
     }
 
     #[test]
-    fn test_teewee_rotate_clockwise() {
-        let origin = Point::new(5, 18);
-        let mut piece = Piece::teewee(origin);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(5, 19),
-            Point::new(6, 19),
-            Point::new(6, 20)
-        ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(5, 19),
-            Point::new(6, 19),
-            Point::new(7, 19),
-            Point::new(6, 20)
-        ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(6, 19),
-            Point::new(7, 19),
-            Point::new(6, 20)
-        ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(5, 19),
-            Point::new(6, 19),
-            Point::new(7, 19)
-        ]);
-    }
-
-    #[test]
-    fn test_teewee_rotate_counterclockwise() {
-        let origin = Point::new(5, 18);
-        let mut piece = Piece::teewee(origin);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(6, 19),
-            Point::new(7, 19),
-            Point::new(6, 20)
-        ]);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(5, 19),
-            Point::new(6, 19),
-            Point::new(7, 19),
-            Point::new(6, 20)
-        ]);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(5, 19),
-            Point::new(6, 19),
-            Point::new(6, 20)
-        ]);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(6, 18),
-            Point::new(5, 19),
-            Point::new(6, 19),
-            Point::new(7, 19)
-        ]);
-    }
-
-    #[test]
     fn test_points_smashboy() {
         let origin = Point::new(5, 18);
         let piece = Piece::smashboy(origin);
-        assert_eq!(piece.points, [
-            Point::new(5, 18),
-            Point::new(6, 18),
-            Point::new(5, 19),
-            Point::new(6, 19)
-        ]);
-    }
-
-    #[test]
-    fn test_smashboy_rotate_clockwise() {
-        let origin = Point::new(5, 18);
-        let mut piece = Piece::smashboy(origin);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(5, 18),
-            Point::new(6, 18),
-            Point::new(5, 19),
-            Point::new(6, 19)
-        ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(5, 18),
-            Point::new(6, 18),
-            Point::new(5, 19),
-            Point::new(6, 19)
-        ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(5, 18),
-            Point::new(6, 18),
-            Point::new(5, 19),
-            Point::new(6, 19)
-        ]);
-        piece.rotate_clockwise();
-        assert_eq!(piece.points, [
-            Point::new(5, 18),
-            Point::new(6, 18),
-            Point::new(5, 19),
-            Point::new(6, 19)
-        ]);
-    }
-
-    #[test]
-    fn test_smashboy_rotate_counterclockwise() {
-        let origin = Point::new(5, 18);
-        let mut piece = Piece::smashboy(origin);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(5, 18),
-            Point::new(6, 18),
-            Point::new(5, 19),
-            Point::new(6, 19)
-        ]);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(5, 18),
-            Point::new(6, 18),
-            Point::new(5, 19),
-            Point::new(6, 19)
-        ]);
-        piece.rotate_counterclockwise();
-        assert_eq!(piece.points, [
-            Point::new(5, 18),
-            Point::new(6, 18),
-            Point::new(5, 19),
-            Point::new(6, 19)
-        ]);
-        piece.rotate_counterclockwise();
         assert_eq!(piece.points, [
             Point::new(5, 18),
             Point::new(6, 18),

@@ -1,6 +1,5 @@
 use crate::piece::{Piece, Point};
 use crate::matrix::{Matrix, Color};
-use crate::rotate;
 
 pub enum GameMode {
     AType,
@@ -65,8 +64,8 @@ impl Game {
     }
 
     // Handle the placement of a piece.
-    //  Clear rows
-    //  update score,
+    //  Clear rows (todo)
+    //  update score (todo)
     //  next piece becomes current
     //  select new next piece
     fn piece_placed(&mut self) {
