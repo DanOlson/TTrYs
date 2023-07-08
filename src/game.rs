@@ -6,11 +6,42 @@ pub enum GameMode {
     BType,
 }
 
+#[derive(Copy, Clone)]
+pub struct Level {
+    pub ticks_per_drop: usize,
+    pub counter: usize,
+}
+
+impl Level {
+    pub fn new(ticks_per_drop: usize) -> Self {
+        Self {
+            ticks_per_drop,
+            counter: 0
+        }
+    }
+
+    pub fn tick(&mut self) -> Option<()> {
+        self.counter += 1;
+        if self.counter < self.ticks_per_drop {
+            None
+        } else {
+            self.counter = 0;
+            Some(())
+        }
+    }
+}
+
+pub struct Stats {
+    pub score: usize,
+}
+
 pub struct Game {
     pub board: Matrix<Color>,
     pub current_piece: Piece,
     pub next_piece: Piece,
-    pub score: usize,
+    pub stats: Stats,
+    pub level: Level,
+    pub levels: Vec<Level>
 }
 
 impl Game {
@@ -20,12 +51,28 @@ impl Game {
             GameMode::BType => Matrix::random_partial_fill()
         };
         let origin = Point::new(4, 18);
+        let mut levels = Game::all_levels();
+        let level = levels.pop().unwrap().to_owned();
+
         Self {
             board,
+            level,
+            levels,
             current_piece: Piece::random(origin),
             next_piece: Piece::random(origin),
-            score: 0,
+            stats: Stats { score: 0 },
         }
+    }
+
+    fn all_levels() -> Vec<Level> {
+        vec![
+            Level::new(40),
+            Level::new(44),
+            Level::new(48),
+            Level::new(52),
+            Level::new(56),
+            Level::new(60),
+        ]
     }
 
     pub fn on_left(&mut self) {
@@ -41,14 +88,20 @@ impl Game {
             self.piece_placed();
         }
     }
+
     pub fn on_rotate_clockwise(&mut self) {
         self.handle_movement(Piece::project_clockwise_rotation);
     }
+
     pub fn on_rotate_counterclockwise(&mut self) {
         self.handle_movement(Piece::project_counterclockwise_rotation);
     }
 
-    pub fn on_tick(&mut self) {}
+    pub fn on_tick(&mut self) {
+        if self.level.tick().is_some() {
+            self.on_down();
+        }
+    }
 
     fn handle_movement<F>(&mut self, attempt_move: F) -> Option<()>
         where F: Fn(&Piece) -> Option<Piece>
