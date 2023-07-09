@@ -115,18 +115,71 @@ impl Matrix<Color> {
         Some(self)
     }
 
+    pub fn clear_full_rows(&mut self) -> usize {
+        let full_indices = self.rows
+            .iter()
+            .enumerate()
+            .filter_map(|(y, row)| {
+                if row.iter().all(|c| c.eq(&Color::Black)) {
+                    Some(y)
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+        let points_to_clear = self.rows
+            .iter()
+            .enumerate()
+            .fold(vec![], |mut acc: Vec<Point>, (y, row)| {
+                if !full_indices.contains(&y) { return acc }
+
+                row.iter()
+                    .enumerate()
+                    .for_each(|(x, _)| {
+                        acc.push(Point::new(x, y));
+                    });
+                acc
+            });
+        points_to_clear
+            .iter()
+            .for_each(|p| self.unset(p.x, p.y));
+        let points_to_drop = self.rows
+            .iter()
+            .enumerate()
+            .fold(vec![], |mut acc, (y, row)| {
+                if full_indices.contains(&y) { return acc }
+                row.iter()
+                    .enumerate()
+                    .for_each(|(x, color)| {
+                        if color == &Color::Black {
+                            acc.push(Point::new(x, y));
+                        }
+                    });
+                acc
+            });
+        points_to_drop
+            .iter()
+            .for_each(|p| self.unset(p.x, p.y));
+
+        points_to_drop
+            .iter()
+            .for_each(|p| {
+                let drop_by = full_indices
+                    .iter()
+                    .filter(|y| p.y > **y)
+                    .count();
+                self.set(p.x, p.y - drop_by, Color::Black);
+            });
+
+        full_indices.len()
+    }
+
     fn can_apply(&self, points: &[Point]) -> bool {
         points
             .iter()
             .all(|p| self.get(p.x, p.y).ne(&Some(Color::Black)))
     }
 }
-
-// impl Iterator for Matrix {
-//     type Item = Color;
-
-//     fn next(&mut self) -> Option<Self::Item> { todo!() }
-// }
 
 // +--+--+--+--+--+--+--+--+--+--+--+
 fn horizontal_border() -> String {

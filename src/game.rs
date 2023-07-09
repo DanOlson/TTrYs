@@ -123,6 +123,7 @@ impl Game {
     //  select new next piece
     fn piece_placed(&mut self) {
         self.board.settle(&self.current_piece.points);
+        self.board.clear_full_rows();
         self.current_piece = self.next_piece;
         self.next_piece = Piece::random(Point::new(4, 18));
     }
