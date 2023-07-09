@@ -15,6 +15,7 @@ use crate::game::{Game, GameMode};
 mod matrix;
 mod piece;
 mod game;
+mod scoring;
 mod rotate;
 
 fn main() {

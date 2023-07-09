@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+use crate::scoring::{RowsCleared, ScoringConfig};
 use crate::piece::{Piece, Point};
 use crate::matrix::{Matrix, Color};
 
@@ -10,13 +12,17 @@ pub enum GameMode {
 pub struct Level {
     pub ticks_per_drop: usize,
     pub counter: usize,
+    pub scoring_config: ScoringConfig,
+    pub rows_to_pass: usize,
 }
 
 impl Level {
-    pub fn new(ticks_per_drop: usize) -> Self {
+    pub fn new(ticks_per_drop: usize, rows_to_pass: usize, scoring_config: ScoringConfig) -> Self {
         Self {
             ticks_per_drop,
-            counter: 0
+            counter: 0,
+            rows_to_pass,
+            scoring_config
         }
     }
 
@@ -33,6 +39,28 @@ impl Level {
 
 pub struct Stats {
     pub score: usize,
+    pub rows_cleared: usize,
+}
+
+impl Stats {
+    pub fn new() -> Self {
+        Self { score: 0, rows_cleared: 0 }
+    }
+
+    pub fn update(&mut self, score: usize, rows: &RowsCleared) {
+        self.score += score;
+        self.record_rows_cleared(rows);
+    }
+
+    fn record_rows_cleared(&mut self, rows: &RowsCleared) {
+        self.rows_cleared += match rows {
+            RowsCleared::Zero => 0,
+            RowsCleared::One => 1,
+            RowsCleared::Two => 2,
+            RowsCleared::Three => 3,
+            RowsCleared::Four => 4,
+        }
+    }
 }
 
 pub struct Game {
@@ -41,7 +69,7 @@ pub struct Game {
     pub next_piece: Piece,
     pub stats: Stats,
     pub level: Level,
-    pub levels: Vec<Level>
+    pub levels: VecDeque<Level>
 }
 
 impl Game {
@@ -52,7 +80,7 @@ impl Game {
         };
         let origin = Point::new(4, 18);
         let mut levels = Game::all_levels();
-        let level = levels.pop().unwrap().to_owned();
+        let level = levels.pop_front().unwrap().to_owned();
 
         Self {
             board,
@@ -60,19 +88,25 @@ impl Game {
             levels,
             current_piece: Piece::random(origin),
             next_piece: Piece::random(origin),
-            stats: Stats { score: 0 },
+            stats: Stats::new(),
         }
     }
 
-    fn all_levels() -> Vec<Level> {
-        vec![
-            Level::new(40),
-            Level::new(44),
-            Level::new(48),
-            Level::new(52),
-            Level::new(56),
-            Level::new(60),
-        ]
+    fn all_levels() -> VecDeque<Level> {
+        let max_ticks_per_drop = 60;
+        (0..10).map(|i| {
+            Level::new(
+                max_ticks_per_drop - i * 4,
+                (i + 1) * 10,
+                ScoringConfig::new(
+                    (i + 1) * 40,
+                    (i + 1) * 100,
+                    (i + 1) * 300,
+                    (i + 1) * 1200,
+                )
+            )
+        })
+        .collect()
     }
 
     pub fn on_left(&mut self) {
@@ -123,9 +157,22 @@ impl Game {
     //  select new next piece
     fn piece_placed(&mut self) {
         self.board.settle(&self.current_piece.points);
-        self.board.clear_full_rows();
+        let rows_cleared = self.board.clear_full_rows();
+        let score = self.level.scoring_config.score(&rows_cleared);
+        self.stats.update(score, &rows_cleared);
+        self.update_level();
         self.current_piece = self.next_piece;
         self.next_piece = Piece::random(Point::new(4, 18));
+    }
+
+    fn update_level(&mut self) {
+        if self.stats.rows_cleared < self.level.rows_to_pass {
+            return
+        }
+
+        if let Some(next_level) = self.levels.pop_front() {
+            self.level = next_level;
+        }
     }
 }
 

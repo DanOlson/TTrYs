@@ -1,4 +1,5 @@
 use rand::{thread_rng, Rng};
+use crate::scoring::RowsCleared;
 use crate::piece::{Piece, Point};
 
 const WIDTH: usize = 10;
@@ -62,7 +63,7 @@ impl Matrix<Color> {
     pub fn random_partial_fill() -> Self {
         let mut rows = vec![Vec::from(EMPTY_ROW); HEIGHT];
         (0..HEIGHT).for_each(|i| {
-            if i > HEIGHT - 6 {
+            if i < HEIGHT - 15 {
                 rows[i] = Self::random_row();
             }
         });
@@ -115,7 +116,7 @@ impl Matrix<Color> {
         Some(self)
     }
 
-    pub fn clear_full_rows(&mut self) -> usize {
+    pub fn clear_full_rows(&mut self) -> RowsCleared {
         let full_indices = self.rows
             .iter()
             .enumerate()
@@ -171,7 +172,13 @@ impl Matrix<Color> {
                 self.set(p.x, p.y - drop_by, Color::Black);
             });
 
-        full_indices.len()
+        match full_indices.len() {
+            1 => RowsCleared::One,
+            2 => RowsCleared::Two,
+            3 => RowsCleared::Three,
+            4 => RowsCleared::Four,
+            _ => RowsCleared::Zero
+        }
     }
 
     fn can_apply(&self, points: &[Point]) -> bool {
