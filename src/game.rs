@@ -69,7 +69,8 @@ pub struct Game {
     pub next_piece: Piece,
     pub stats: Stats,
     pub level: Level,
-    pub levels: VecDeque<Level>
+    pub levels: VecDeque<Level>,
+    pub wants_to_quit: bool
 }
 
 impl Game {
@@ -80,7 +81,7 @@ impl Game {
         };
         let origin = Point::new(4, 18);
         let mut levels = Game::all_levels();
-        let level = levels.pop_front().unwrap().to_owned();
+        let level = levels.pop_front().unwrap();
 
         Self {
             board,
@@ -89,6 +90,7 @@ impl Game {
             current_piece: Piece::random(origin),
             next_piece: Piece::random(origin),
             stats: Stats::new(),
+            wants_to_quit: false
         }
     }
 
@@ -107,6 +109,14 @@ impl Game {
             )
         })
         .collect()
+    }
+
+    pub fn quit(&mut self) {
+        self.wants_to_quit = true
+    }
+
+    pub fn should_quit(&self) -> bool {
+        self.wants_to_quit
     }
 
     pub fn on_left(&mut self) {
@@ -172,6 +182,8 @@ impl Game {
 
         if let Some(next_level) = self.levels.pop_front() {
             self.level = next_level;
+        } else {
+            self.quit()
         }
     }
 }

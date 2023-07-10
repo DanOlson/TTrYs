@@ -27,9 +27,13 @@ fn run_game(game: &mut Game) -> Result<(), Box<dyn std::error::Error>> {
     let mut stdout = stdout().into_raw_mode().unwrap();
     let events = setup_events(Duration::from_millis(10));
     loop {
+        if game.should_quit() {
+            write!(stdout, "{}", termion::cursor::Show).unwrap();
+            return Ok(())
+        }
         match events.recv()? {
             Event::Input(key) => match key {
-                Key::Ctrl('c') => exit(&mut stdout),
+                Key::Ctrl('c') => game.quit(),
                 Key::Char('s') => game.on_down(),
                 Key::Char('a') => game.on_left(),
                 Key::Char('d') => game.on_right(),
@@ -55,11 +59,6 @@ fn render(game: &Game, out: &mut RawTerminal<Stdout>) {
         game.board
     ).unwrap();
     out.flush().unwrap();
-}
-
-fn exit(out: &mut RawTerminal<Stdout>) {
-    write!(out, "{}", termion::cursor::Show).unwrap();
-    panic!("all done");
 }
 
 enum Event {
