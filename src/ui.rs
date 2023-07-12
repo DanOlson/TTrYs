@@ -1,9 +1,7 @@
 use ratatui::{
     backend::Backend,
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    layout::{Alignment, Constraint, Direction, Layout},
     style::{Color as UiColor, Modifier, Style},
-    symbols,
-    text::{Line, Span},
     widgets::{Block, Borders, BorderType, Cell, Padding, Paragraph, Row, Table},
     Frame,
 };
@@ -14,8 +12,14 @@ use crate::{
     piece::Piece,
 };
 
+const BOARD_WIDTH: u16 = 22;
+const BOARD_HEIGHT: u16 = 22;
+const LEFT_WIDGET_WIDTH: u16 = 22;
+
 pub fn draw<B: Backend>(f: &mut Frame<B>, game: &mut Game) {
     let size = f.size();
+    let margin = (size.width - LEFT_WIDGET_WIDTH - BOARD_WIDTH) / 2;
+    let vertical_margin = (size.height - BOARD_HEIGHT) / 2;
 
     let block = Block::default()
         .borders(Borders::ALL)
@@ -28,52 +32,43 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, game: &mut Game) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
-            Constraint::Min(40),
-            Constraint::Length(31),
-            Constraint::Min(40),
+            Constraint::Length(margin),
+            Constraint::Length(LEFT_WIDGET_WIDTH),
+            Constraint::Length(BOARD_WIDTH),
+            Constraint::Length(margin),
         ].as_ref())
         .split(size);
 
     let left_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Percentage(80),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
+            Constraint::Length(vertical_margin),
+            Constraint::Length(5),
+            Constraint::Length(5),
+            Constraint::Length(5),
+            Constraint::Length(vertical_margin),
         ].as_ref())
-        .split(chunks[0]);
+        .split(chunks[1]);
     let middle_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Percentage(20),
-            Constraint::Percentage(70),
-            Constraint::Percentage(10),
-        ].as_ref())
-        .split(chunks[1]);
-    let right_chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Percentage(30),
-            Constraint::Percentage(70),
+            Constraint::Length(vertical_margin),
+            Constraint::Length(BOARD_HEIGHT),
+            Constraint::Length(vertical_margin),
         ].as_ref())
         .split(chunks[2]);
 
-    // let game_board_block = Block::default()
-    //     .borders(Borders::ALL);
-
-    // let rendered_game = format!("{}", game.board);
-    // let board = Paragraph::new(rendered_game).block(game_board_block);
     let board = board_widget(&game.board);
     f.render_widget(board, middle_chunks[1]);
 
     let next_piece = next_piece_widget(&game.next_piece);
-    f.render_widget(next_piece, right_chunks[0]);
+    f.render_widget(next_piece, left_chunks[1]);
 
     let score = score_widget(&game.stats);
-    f.render_widget(score, left_chunks[1]);
+    f.render_widget(score, left_chunks[2]);
 
     let level = level_widget(&game.level);
-    f.render_widget(level, left_chunks[2]);
+    f.render_widget(level, left_chunks[3]);
 }
 
 fn board_widget(board: &Matrix<Color>) -> Table {
@@ -95,7 +90,8 @@ fn board_widget(board: &Matrix<Color>) -> Table {
             Row::new(cells).height(1)
         });
     let table_block = Block::default()
-        .borders(Borders::ALL);
+        .borders(Borders::ALL)
+        .border_type(BorderType::Thick);
 
     Table::new(rows)
         .block(table_block)
@@ -111,15 +107,17 @@ fn board_widget(board: &Matrix<Color>) -> Table {
             Constraint::Length(2),
             Constraint::Length(2),
         ])
+        .column_spacing(0)
 }
 
 fn next_piece_widget(next_piece: &Piece) -> Table {
     let bbox = generate_bounding_matrix(next_piece);
     let table_block = Block::default()
         .borders(Borders::ALL)
+        .padding(Padding { left: 6, right: 0, top: 1, bottom: 0 })
         .title("Next Piece")
         .title_alignment(Alignment::Center)
-        .border_type(BorderType::Rounded);
+        .border_type(BorderType::Thick);
     let rows = bbox
         .rows
         .iter()
@@ -145,6 +143,7 @@ fn next_piece_widget(next_piece: &Piece) -> Table {
             Constraint::Length(2),
             Constraint::Length(2),
         ])
+        .column_spacing(0)
 }
 
 fn generate_bounding_matrix(piece: &Piece) -> Matrix<Color> {
@@ -166,12 +165,13 @@ fn generate_bounding_matrix(piece: &Piece) -> Matrix<Color> {
 fn score_widget(stats: &Stats) -> Paragraph {
     let block = Block::default()
         .borders(Borders::ALL)
+        .border_type(BorderType::Thick)
         .title("Score")
         .title_alignment(Alignment::Center);
     let style = Style::default()
         .add_modifier(Modifier::BOLD)
         .fg(UiColor::LightYellow);
-    Paragraph::new(format!("{}", stats.score))
+    Paragraph::new(format!("\n{}", stats.score))
         .block(block)
         .alignment(Alignment::Center)
         .style(style)
@@ -180,12 +180,13 @@ fn score_widget(stats: &Stats) -> Paragraph {
 fn level_widget(level: &Level) -> Paragraph {
     let block = Block::default()
         .borders(Borders::ALL)
+        .border_type(BorderType::Thick)
         .title("Level")
         .title_alignment(Alignment::Center);
     let style = Style::default()
         .add_modifier(Modifier::BOLD)
         .fg(UiColor::LightCyan);
-    Paragraph::new(format!("{}", level.number))
+    Paragraph::new(format!("\n{}", level.number))
         .block(block)
         .alignment(Alignment::Center)
         .style(style)
