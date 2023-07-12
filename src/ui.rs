@@ -15,6 +15,7 @@ use crate::{
 const BOARD_WIDTH: u16 = 22;
 const BOARD_HEIGHT: u16 = 22;
 const LEFT_WIDGET_WIDTH: u16 = 22;
+const STATS_HEIGHT: u16 = BOARD_HEIGHT / 4;
 
 pub fn draw<B: Backend>(f: &mut Frame<B>, game: &mut Game) {
     let size = f.size();
@@ -23,7 +24,7 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, game: &mut Game) {
 
     let block = Block::default()
         .borders(Borders::ALL)
-        .title("Tetris")
+        .title("TTrYs")
         .title_alignment(Alignment::Center)
         .border_type(BorderType::Rounded);
 
@@ -43,13 +44,11 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, game: &mut Game) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(vertical_margin),
-            Constraint::Length(5),
-            Constraint::Length(5),
-            Constraint::Length(5),
+            Constraint::Length(BOARD_HEIGHT),
             Constraint::Length(vertical_margin),
         ].as_ref())
         .split(chunks[1]);
-    let middle_chunks = Layout::default()
+    let right_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(vertical_margin),
@@ -57,18 +56,31 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, game: &mut Game) {
             Constraint::Length(vertical_margin),
         ].as_ref())
         .split(chunks[2]);
+    let stats_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(STATS_HEIGHT),
+            Constraint::Length(STATS_HEIGHT),
+            Constraint::Length(STATS_HEIGHT),
+            Constraint::Length(STATS_HEIGHT),
+            Constraint::Min(0),
+        ].as_ref())
+        .split(left_chunks[1]);
 
     let board = board_widget(&game.board);
-    f.render_widget(board, middle_chunks[1]);
+    f.render_widget(board, right_chunks[1]);
 
     let next_piece = next_piece_widget(&game.next_piece);
-    f.render_widget(next_piece, left_chunks[1]);
+    f.render_widget(next_piece, stats_chunks[0]);
 
     let score = score_widget(&game.stats);
-    f.render_widget(score, left_chunks[2]);
+    f.render_widget(score, stats_chunks[1]);
 
     let level = level_widget(&game.level);
-    f.render_widget(level, left_chunks[3]);
+    f.render_widget(level, stats_chunks[2]);
+
+    let lines = lines_widget(&game.stats);
+    f.render_widget(lines, stats_chunks[3]);
 }
 
 fn board_widget(board: &Matrix<Color>) -> Table {
@@ -117,7 +129,8 @@ fn next_piece_widget(next_piece: &Piece) -> Table {
         .padding(Padding { left: 6, right: 0, top: 1, bottom: 0 })
         .title("Next Piece")
         .title_alignment(Alignment::Center)
-        .border_type(BorderType::Thick);
+        .border_type(BorderType::Thick)
+        .border_style(Style::default().fg(UiColor::LightGreen));
     let rows = bbox
         .rows
         .iter()
@@ -187,6 +200,21 @@ fn level_widget(level: &Level) -> Paragraph {
         .add_modifier(Modifier::BOLD)
         .fg(UiColor::LightCyan);
     Paragraph::new(format!("\n{}", level.number))
+        .block(block)
+        .alignment(Alignment::Center)
+        .style(style)
+}
+
+fn lines_widget(stats: &Stats) -> Paragraph {
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Thick)
+        .title("Lines")
+        .title_alignment(Alignment::Center);
+    let style = Style::default()
+        .add_modifier(Modifier::BOLD)
+        .fg(UiColor::LightRed);
+    Paragraph::new(format!("\n{}", stats.rows_cleared))
         .block(block)
         .alignment(Alignment::Center)
         .style(style)
