@@ -184,7 +184,13 @@ impl Matrix<Color> {
     fn can_apply(&self, points: &[Point]) -> bool {
         points
             .iter()
-            .all(|p| self.get(p.x, p.y).ne(&Some(Color::Black)))
+            .all(|p| {
+                if let Some(color) = self.get(p.x, p.y) {
+                    color.ne(&Color::Black)
+                } else {
+                    false
+                }
+            })
     }
 }
 
@@ -244,7 +250,14 @@ mod tests {
     }
 
     #[test]
-    fn test_accept_success() {
+    fn test_apply_out_of_bounds() {
+        let mut matrix = Matrix::empty();
+        let piece = Piece::hero(Point::new(7, 0));
+        assert!(matrix.apply(piece).is_none());
+    }
+
+    #[test]
+    fn test_apply_success() {
         let mut matrix = Matrix::empty();
         let origin = Point::new(4, 18);
         let piece = Piece::rhode_island_z(origin);
@@ -257,7 +270,7 @@ mod tests {
     }
 
     #[test]
-    fn test_accept_out_of_bounds_x() {
+    fn test_apply_out_of_bounds_x() {
         let mut matrix = Matrix::empty();
         let origin = Point::new(8, 18);
         let piece = Piece::rhode_island_z(origin);
