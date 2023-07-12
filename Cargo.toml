@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 rand = "0.8.5"
 termion = "2.0.1"
+ratatui = { version = "0.21.0", features = ["all-widgets", "termion"]}

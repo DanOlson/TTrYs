@@ -8,8 +8,14 @@ use std::{
 use termion::{
     raw::{IntoRawMode, RawTerminal},
     event::Key,
-    input::TermRead
+    input::TermRead,
+    screen::IntoAlternateScreen,
 };
+use ratatui::{
+    backend::{Backend, TermionBackend},
+    Terminal,
+};
+
 use crate::game::{Game, GameMode};
 
 mod matrix;
@@ -17,20 +23,27 @@ mod piece;
 mod game;
 mod scoring;
 mod rotate;
+mod ui;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let stdout = stdout()
+        .into_raw_mode()?
+        .into_alternate_screen()?;
+    let backend = TermionBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+
     let mut game = Game::new(GameMode::AType);
-    run_game(&mut game).ok();
+    run_game(&mut game, &mut terminal)?;
+
+    Ok(())
 }
 
-fn run_game(game: &mut Game) -> Result<(), Box<dyn std::error::Error>> {
-    let mut stdout = stdout().into_raw_mode().unwrap();
+fn run_game<B: Backend>(game: &mut Game, terminal: &mut Terminal<B>) -> Result<(), Box<dyn std::error::Error>> {
     let events = setup_events(Duration::from_millis(10));
     loop {
-        if game.should_quit() {
-            write!(stdout, "{}", termion::cursor::Show).unwrap();
-            return Ok(())
-        }
+        terminal.draw(|f| ui::draw(f, game))?;
+
+        if game.should_quit() { return Ok(()) }
         match events.recv()? {
             Event::Input(key) => match key {
                 Key::Ctrl('c') => game.quit(),
@@ -45,7 +58,7 @@ fn run_game(game: &mut Game) -> Result<(), Box<dyn std::error::Error>> {
                 game.on_tick();
             }
         }
-        render(game, &mut stdout);
+        // render(game, &mut stdout);
     }
 }
 

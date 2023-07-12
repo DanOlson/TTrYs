@@ -14,11 +14,13 @@ pub struct Level {
     pub counter: usize,
     pub scoring_config: ScoringConfig,
     pub rows_to_pass: usize,
+    pub number: usize,
 }
 
 impl Level {
-    pub fn new(ticks_per_drop: usize, rows_to_pass: usize, scoring_config: ScoringConfig) -> Self {
+    pub fn new(number: usize, ticks_per_drop: usize, rows_to_pass: usize, scoring_config: ScoringConfig) -> Self {
         Self {
+            number,
             ticks_per_drop,
             counter: 0,
             rows_to_pass,
@@ -98,6 +100,7 @@ impl Game {
         let max_ticks_per_drop = 60;
         (0..10).map(|i| {
             Level::new(
+                i + 1,
                 max_ticks_per_drop - i * 4,
                 (i + 1) * 10,
                 ScoringConfig::new(
