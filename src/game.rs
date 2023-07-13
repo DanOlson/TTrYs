@@ -18,7 +18,12 @@ pub struct Level {
 }
 
 impl Level {
-    pub fn new(number: usize, ticks_per_drop: usize, rows_to_pass: usize, scoring_config: ScoringConfig) -> Self {
+    pub fn new(
+        number: usize,
+        ticks_per_drop: usize,
+        rows_to_pass: usize,
+        scoring_config: ScoringConfig
+    ) -> Self {
         Self {
             number,
             ticks_per_drop,
@@ -149,7 +154,7 @@ impl Game {
     }
 
     pub fn on_tick(&mut self) {
-        if self.paused { return }
+        if self.is_stopped() { return }
 
         if self.level.tick().is_some() {
             self.on_down();
@@ -160,9 +165,15 @@ impl Game {
         self.paused = !self.paused;
     }
 
+    fn is_stopped(&self) -> bool {
+        self.paused || self.game_over
+    }
+
     fn handle_movement<F>(&mut self, attempt_move: F) -> Option<()>
         where F: Fn(&Piece) -> Option<Piece>
     {
+        if self.is_stopped() { return None }
+
         let projection = attempt_move(&self.current_piece)?;
 
         if self.board.apply(projection).is_some() {
@@ -179,6 +190,8 @@ impl Game {
     //  next piece becomes current
     //  select new next piece
     fn piece_placed(&mut self) {
+        if self.is_stopped() { return }
+
         self.board.settle(&self.current_piece.points);
         let rows_cleared = self.board.clear_full_rows();
         let score = self.level.scoring_config.score(&rows_cleared);
@@ -186,6 +199,9 @@ impl Game {
         self.update_level();
         self.current_piece = self.next_piece;
         self.next_piece = Piece::random(Point::new(4, 18));
+        if !self.board.can_apply_piece(&self.current_piece) {
+            self.game_over = true;
+        }
     }
 
     fn update_level(&mut self) {

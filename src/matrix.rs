@@ -181,6 +181,10 @@ impl Matrix<Color> {
         }
     }
 
+    pub fn can_apply_piece(&self, piece: &Piece) -> bool {
+        self.can_apply(&piece.points)
+    }
+
     fn can_apply(&self, points: &[Point]) -> bool {
         points
             .iter()

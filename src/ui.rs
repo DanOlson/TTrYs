@@ -1,6 +1,7 @@
+use std::rc::Rc;
 use ratatui::{
     backend::Backend,
-    layout::{Alignment, Constraint, Direction, Layout},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color as UiColor, Modifier, Style},
     widgets::{Block, Borders, BorderType, Cell, Padding, Paragraph, Row, Table},
     Frame,
@@ -16,6 +17,20 @@ const BOARD_WIDTH: u16 = 22;
 const BOARD_HEIGHT: u16 = 22;
 const LEFT_WIDGET_WIDTH: u16 = 22;
 const STATS_HEIGHT: u16 = BOARD_HEIGHT / 4;
+const GAME_OVER: &str = r#"
+  ___   _   __  __ ___    _____   _____ ___
+ / __| /_\ |  \/  | __|  / _ \ \ / / __| _ \
+| (_ |/ _ \| |\/| | _|  | (_) \ V /| _||   /
+ \___/_/ \_\_|  |_|___|  \___/ \_/ |___|_|_\
+
+"#;
+const PAUSED: &str = r#"
+ ___  _  _   _ ___ ___
+| _ \/_\| | | / __| __|
+|  _/ _ \ |_| \__ \ _|
+|_|/_/ \_\___/|___/___|
+
+"#;
 
 pub fn draw<B: Backend>(f: &mut Frame<B>, game: &mut Game) {
     let size = f.size();
@@ -26,11 +41,20 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, game: &mut Game) {
         .borders(Borders::ALL)
         .title("TTrYs")
         .title_alignment(Alignment::Center)
-        .border_type(BorderType::Rounded);
+        .border_type(BorderType::Double);
 
     f.render_widget(block, size);
 
     let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(vertical_margin),
+            Constraint::Length(BOARD_HEIGHT),
+            Constraint::Length(vertical_margin),
+        ].as_ref())
+        .split(size);
+
+    let center_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
             Constraint::Length(margin),
@@ -38,24 +62,8 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, game: &mut Game) {
             Constraint::Length(BOARD_WIDTH),
             Constraint::Length(margin),
         ].as_ref())
-        .split(size);
-
-    let left_chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(vertical_margin),
-            Constraint::Length(BOARD_HEIGHT),
-            Constraint::Length(vertical_margin),
-        ].as_ref())
         .split(chunks[1]);
-    let right_chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(vertical_margin),
-            Constraint::Length(BOARD_HEIGHT),
-            Constraint::Length(vertical_margin),
-        ].as_ref())
-        .split(chunks[2]);
+
     let stats_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -65,11 +73,19 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, game: &mut Game) {
             Constraint::Length(STATS_HEIGHT),
             Constraint::Min(0),
         ].as_ref())
-        .split(left_chunks[1]);
+        .split(center_chunks[1]);
 
+    draw_game_board(f, center_chunks[2], game);
+    draw_stats_widgets(f, stats_chunks, game);
+    draw_top_banner(f, chunks[0], game);
+}
+
+fn draw_game_board<B: Backend>(f: &mut Frame<B>, target: Rect, game: &Game) {
     let board = board_widget(&game.board);
-    f.render_widget(board, right_chunks[1]);
+    f.render_widget(board, target);
+}
 
+fn draw_stats_widgets<B: Backend>(f: &mut Frame<B>, stats_chunks: Rc<[Rect]>, game: &Game) {
     let next_piece = next_piece_widget(&game.next_piece);
     f.render_widget(next_piece, stats_chunks[0]);
 
@@ -81,6 +97,12 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, game: &mut Game) {
 
     let lines = lines_widget(&game.stats);
     f.render_widget(lines, stats_chunks[3]);
+}
+
+fn draw_top_banner<B: Backend>(f: &mut Frame<B>, target: Rect, game: &Game) {
+    if let Some(banner) = banner_widget(game) {
+        f.render_widget(banner, target);
+    }
 }
 
 fn board_widget(board: &Matrix<Color>) -> Table {
@@ -218,4 +240,21 @@ fn lines_widget(stats: &Stats) -> Paragraph {
         .block(block)
         .alignment(Alignment::Center)
         .style(style)
+}
+
+fn banner_widget(game: &Game) -> Option<Paragraph> {
+    if !game.paused && !game.game_over { return None }
+
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Thick);
+    let style = Style::default()
+        .add_modifier(Modifier::BOLD)
+        .fg(if game.paused { UiColor::Yellow } else { UiColor::Red });
+    let content = if game.paused { PAUSED } else { GAME_OVER };
+    let paragraph = Paragraph::new(content)
+        .alignment(Alignment::Center)
+        .style(style)
+        .block(block);
+    Some(paragraph)
 }
