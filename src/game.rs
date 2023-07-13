@@ -72,7 +72,9 @@ pub struct Game {
     pub stats: Stats,
     pub level: Level,
     pub levels: VecDeque<Level>,
-    pub wants_to_quit: bool
+    pub wants_to_quit: bool,
+    pub paused: bool,
+    pub game_over: bool,
 }
 
 impl Game {
@@ -92,7 +94,9 @@ impl Game {
             current_piece: Piece::random(origin),
             next_piece: Piece::random(origin),
             stats: Stats::new(),
-            wants_to_quit: false
+            wants_to_quit: false,
+            paused: false,
+            game_over: false,
         }
     }
 
@@ -145,9 +149,15 @@ impl Game {
     }
 
     pub fn on_tick(&mut self) {
+        if self.paused { return }
+
         if self.level.tick().is_some() {
             self.on_down();
         }
+    }
+
+    pub fn toggle_pause(&mut self) {
+        self.paused = !self.paused;
     }
 
     fn handle_movement<F>(&mut self, attempt_move: F) -> Option<()>

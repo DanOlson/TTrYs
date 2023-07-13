@@ -50,6 +50,7 @@ fn run_game<B: Backend>(game: &mut Game, terminal: &mut Terminal<B>) -> Result<(
                 Key::Char('s') => game.on_down(),
                 Key::Char('a') => game.on_left(),
                 Key::Char('d') => game.on_right(),
+                Key::Char(' ') => game.toggle_pause(),
                 Key::Left => game.on_rotate_counterclockwise(),
                 Key::Right => game.on_rotate_clockwise(),
                 _ => {}
