@@ -111,6 +111,7 @@ impl Game {
     }
 
     pub fn toggle_pause(&mut self) {
+        if self.game_over { return }
         self.paused = !self.paused;
     }
 
