@@ -18,8 +18,15 @@ const BOARD_WIDTH: u16 = 22;
 const BOARD_HEIGHT: u16 = 22;
 const LEFT_WIDGET_WIDTH: u16 = 22;
 const STATS_HEIGHT: u16 = BOARD_HEIGHT / 4;
+const TTRYS: &str = r#"
+_____ _____  __   __
+|_   _|_   _| \ \ / /__
+  | |   | || '_\ V (_-<
+  |_|   |_||_|  |_|/__/
+
+"#;
 const GAME_OVER: &str = r#"
-  ___   _   __  __ ___    _____   _____ ___
+ ___   _   __  __ ___    _____   _____ ___
  / __| /_\ |  \/  | __|  / _ \ \ / / __| _ \
 | (_ |/ _ \| |\/| | _|  | (_) \ V /| _||   /
  \___/_/ \_\_|  |_|___|  \___/ \_/ |___|_|_\
@@ -101,9 +108,7 @@ fn draw_stats_widgets<B: Backend>(f: &mut Frame<B>, stats_chunks: Rc<[Rect]>, ga
 }
 
 fn draw_top_banner<B: Backend>(f: &mut Frame<B>, target: Rect, game: &Game) {
-    if let Some(banner) = banner_widget(game) {
-        f.render_widget(banner, target);
-    }
+    f.render_widget(banner_widget(game), target);
 }
 
 fn board_widget(board: &Matrix<Cell>) -> Table {
@@ -211,7 +216,7 @@ fn score_widget(stats: &Stats) -> Paragraph {
         .title_alignment(Alignment::Center);
     let style = Style::default()
         .add_modifier(Modifier::BOLD)
-        .fg(TuiColor::LightYellow);
+        .fg(TuiColor::Indexed(124));
     Paragraph::new(format!("\n{}", stats.score))
         .block(block)
         .alignment(Alignment::Center)
@@ -226,7 +231,7 @@ fn level_widget(level: &Level) -> Paragraph {
         .title_alignment(Alignment::Center);
     let style = Style::default()
         .add_modifier(Modifier::BOLD)
-        .fg(TuiColor::LightCyan);
+        .fg(TuiColor::Indexed(185));
     Paragraph::new(format!("\n{}", level.number))
         .block(block)
         .alignment(Alignment::Center)
@@ -241,26 +246,33 @@ fn lines_widget(stats: &Stats) -> Paragraph {
         .title_alignment(Alignment::Center);
     let style = Style::default()
         .add_modifier(Modifier::BOLD)
-        .fg(TuiColor::LightGreen);
+        .fg(TuiColor::Indexed(130));
     Paragraph::new(format!("\n{}", stats.rows_cleared))
         .block(block)
         .alignment(Alignment::Center)
         .style(style)
 }
 
-fn banner_widget(game: &Game) -> Option<Paragraph> {
-    if !game.paused && !game.game_over { return None }
-
+fn banner_widget(game: &Game) -> Paragraph {
     let block = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Thick);
+    let mut color = TuiColor::Indexed(140);
+    let mut content = TTRYS;
+    if game.paused {
+        color = TuiColor::Yellow;
+        content = PAUSED;
+    }
+    if game.game_over {
+        color = TuiColor::Red;
+        content = GAME_OVER;
+    }
     let style = Style::default()
         .add_modifier(Modifier::BOLD)
-        .fg(if game.paused { TuiColor::Yellow } else { TuiColor::Red });
-    let content = if game.paused { PAUSED } else { GAME_OVER };
+        .fg(color);
     let paragraph = Paragraph::new(content)
         .alignment(Alignment::Center)
         .style(style)
         .block(block);
-    Some(paragraph)
+    paragraph
 }
