@@ -24,6 +24,7 @@ mod game;
 mod scoring;
 mod rotate;
 mod ui;
+mod level;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let stdout = stdout()

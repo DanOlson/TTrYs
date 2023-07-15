@@ -78,8 +78,8 @@ fn transpose(matrix: Matrix<usize>) -> Matrix<usize> {
     for y in 0..height {
         for x in 0..width {
             let val = matrix.get(x, y).unwrap();
-            let new_x = width - x - 1; // return to zero-based
-            let new_y = height - y - 1;
+            let new_x = (width - 1) - x; // return to zero-based
+            let new_y = (height - 1) - y;
             out.set(new_y, new_x, val);
         }
     }
@@ -93,8 +93,8 @@ fn extract_points_from_bounding_matrix(
 ) -> [Point; 4] {
     let mut points: Vec<Point> = vec![];
     for (y, row) in bbox.rows.iter().enumerate() {
-        for (x, val) in row.iter().enumerate() {
-            if *val > 0 {
+        for (x, i) in row.iter().enumerate() {
+            if i > &0 {
                 let new_x = x + x_offset;
                 let new_y = y + y_offset;
                 points.push(Point::new(new_x, new_y));
@@ -757,12 +757,12 @@ mod test {
         let matrix = generate_bounding_matrix(&piece);
         assert_eq!(matrix.width(), 3);
         assert_eq!(matrix.height(), 2);
-        assert_eq!(matrix.get(0, 0).unwrap(), 1);
-        assert_eq!(matrix.get(1, 0).unwrap(), 0);
-        assert_eq!(matrix.get(2, 0).unwrap(), 0);
-        assert_eq!(matrix.get(0, 1).unwrap(), 2);
-        assert_eq!(matrix.get(1, 1).unwrap(), 3);
-        assert_eq!(matrix.get(2, 1).unwrap(), 4);
+        assert_eq!(matrix.get(0, 0), Some(1));
+        assert_eq!(matrix.get(1, 0), Some(0));
+        assert_eq!(matrix.get(2, 0), Some(0));
+        assert_eq!(matrix.get(0, 1), Some(2));
+        assert_eq!(matrix.get(1, 1), Some(3));
+        assert_eq!(matrix.get(2, 1), Some(4));
     }
 
     #[test]
@@ -777,28 +777,28 @@ mod test {
             }
         }
 
-        assert_eq!(matrix.get(0, 0).unwrap(), 1);
-        assert_eq!(matrix.get(1, 0).unwrap(), 2);
-        assert_eq!(matrix.get(2, 0).unwrap(), 3);
-        assert_eq!(matrix.get(0, 1).unwrap(), 4);
-        assert_eq!(matrix.get(1, 1).unwrap(), 5);
-        assert_eq!(matrix.get(2, 1).unwrap(), 6);
-        assert_eq!(matrix.get(0, 2).unwrap(), 7);
-        assert_eq!(matrix.get(1, 2).unwrap(), 8);
-        assert_eq!(matrix.get(2, 2).unwrap(), 9);
+        assert_eq!(matrix.get(0, 0), Some(1));
+        assert_eq!(matrix.get(1, 0), Some(2));
+        assert_eq!(matrix.get(2, 0), Some(3));
+        assert_eq!(matrix.get(0, 1), Some(4));
+        assert_eq!(matrix.get(1, 1), Some(5));
+        assert_eq!(matrix.get(2, 1), Some(6));
+        assert_eq!(matrix.get(0, 2), Some(7));
+        assert_eq!(matrix.get(1, 2), Some(8));
+        assert_eq!(matrix.get(2, 2), Some(9));
         debug_print_matrix(&matrix);
 
         let transposed = transpose(matrix);
         debug_print_matrix(&transposed);
 
-        assert_eq!(transposed.get(0, 0).unwrap(), 9);
-        assert_eq!(transposed.get(1, 0).unwrap(), 6);
-        assert_eq!(transposed.get(2, 0).unwrap(), 3);
-        assert_eq!(transposed.get(0, 1).unwrap(), 8);
-        assert_eq!(transposed.get(1, 1).unwrap(), 5);
-        assert_eq!(transposed.get(2, 1).unwrap(), 2);
-        assert_eq!(transposed.get(0, 2).unwrap(), 7);
-        assert_eq!(transposed.get(1, 2).unwrap(), 4);
-        assert_eq!(transposed.get(2, 2).unwrap(), 1);
+        assert_eq!(transposed.get(0, 0), Some(9));
+        assert_eq!(transposed.get(1, 0), Some(6));
+        assert_eq!(transposed.get(2, 0), Some(3));
+        assert_eq!(transposed.get(0, 1), Some(8));
+        assert_eq!(transposed.get(1, 1), Some(5));
+        assert_eq!(transposed.get(2, 1), Some(2));
+        assert_eq!(transposed.get(0, 2), Some(7));
+        assert_eq!(transposed.get(1, 2), Some(4));
+        assert_eq!(transposed.get(2, 2), Some(1));
     }
 }

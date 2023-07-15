@@ -2,14 +2,15 @@ use std::rc::Rc;
 use ratatui::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color as UiColor, Modifier, Style},
-    widgets::{Block, Borders, BorderType, Cell, Padding, Paragraph, Row, Table},
+    style::{Color as TuiColor, Modifier, Style},
+    widgets::{Block, Borders, BorderType, Cell as TuiCell, Padding, Paragraph, Row, Table},
     Frame,
 };
 
 use crate::{
-    game::{Game, Stats, Level},
-    matrix::{Color, Matrix},
+    game::{Game, Stats},
+    level::Level,
+    matrix::{Color, Matrix, Cell},
     piece::Piece,
 };
 
@@ -86,7 +87,7 @@ fn draw_game_board<B: Backend>(f: &mut Frame<B>, target: Rect, game: &Game) {
 }
 
 fn draw_stats_widgets<B: Backend>(f: &mut Frame<B>, stats_chunks: Rc<[Rect]>, game: &Game) {
-    let next_piece = next_piece_widget(&game.next_piece);
+    let next_piece = next_piece_widget(game);
     f.render_widget(next_piece, stats_chunks[0]);
 
     let score = score_widget(&game.stats);
@@ -105,7 +106,7 @@ fn draw_top_banner<B: Backend>(f: &mut Frame<B>, target: Rect, game: &Game) {
     }
 }
 
-fn board_widget(board: &Matrix<Color>) -> Table {
+fn board_widget(board: &Matrix<Cell>) -> Table {
     let rows = board
         .rows
         .iter()
@@ -113,12 +114,12 @@ fn board_widget(board: &Matrix<Color>) -> Table {
         .map(|row| {
             let cells = row
                 .iter()
-                .map(|color| {
-                    if color == &Color::White {
-                        Cell::from("  ")
+                .map(|cell| {
+                    if cell.value == Color::White {
+                        TuiCell::from("  ")
                     } else {
-                        Cell::from("[]")
-                            .style(Style::default().bg(UiColor::Gray))
+                        TuiCell::from("[]")
+                            .style(Style::default().bg(cell_color(cell)))
                     }
                 });
             Row::new(cells).height(1)
@@ -144,15 +145,16 @@ fn board_widget(board: &Matrix<Color>) -> Table {
         .column_spacing(0)
 }
 
-fn next_piece_widget(next_piece: &Piece) -> Table {
-    let bbox = generate_bounding_matrix(next_piece);
+fn next_piece_widget(game: &Game) -> Table {
+    let color = game.piece_color(&game.next_piece);
+    let bbox: Matrix<Cell> = generate_bounding_matrix(&game.next_piece, color);
     let table_block = Block::default()
         .borders(Borders::ALL)
         .padding(Padding { left: 6, right: 0, top: 1, bottom: 0 })
         .title("Next Piece")
         .title_alignment(Alignment::Center)
         .border_type(BorderType::Thick)
-        .border_style(Style::default().fg(UiColor::LightGreen));
+        .border_style(Style::default().fg(TuiColor::White));
     let rows = bbox
         .rows
         .iter()
@@ -160,12 +162,12 @@ fn next_piece_widget(next_piece: &Piece) -> Table {
         .map(|row| {
             let cells = row
                 .iter()
-                .map(|color| {
-                    if color == &Color::White {
-                        Cell::from("  ")
+                .map(|cell| {
+                    if cell.value == Color::White {
+                        TuiCell::from("  ")
                     } else {
-                        Cell::from("[]")
-                            .style(Style::default().bg(UiColor::Gray))
+                        TuiCell::from("[]")
+                            .style(Style::default().bg(cell_color(cell)))
                     }
                 });
             Row::new(cells).height(1)
@@ -181,18 +183,22 @@ fn next_piece_widget(next_piece: &Piece) -> Table {
         .column_spacing(0)
 }
 
-fn generate_bounding_matrix(piece: &Piece) -> Matrix<Color> {
+fn cell_color(cell: &Cell) -> TuiColor {
+    TuiColor::Indexed(cell.color)
+}
+
+fn generate_bounding_matrix(piece: &Piece, color: u8) -> Matrix<Cell> {
     let (lower_left, upper_right) = piece.bounds();
     let width = upper_right.x - lower_left.x + 1;
     let height = upper_right.y - lower_left.y + 1;
-    let mut out = Matrix::new(width, height, Color::White);
+    let mut out: Matrix<Cell> = Matrix::new(width, height, Cell::white());
     piece
         .points
         .iter()
         .for_each(|p| {
             let x = p.x - lower_left.x;
             let y = p.y - lower_left.y;
-            out.set(x, y, Color::Black);
+            out.set(x, y, Cell::black(color));
         });
     out
 }
@@ -205,7 +211,7 @@ fn score_widget(stats: &Stats) -> Paragraph {
         .title_alignment(Alignment::Center);
     let style = Style::default()
         .add_modifier(Modifier::BOLD)
-        .fg(UiColor::LightYellow);
+        .fg(TuiColor::LightYellow);
     Paragraph::new(format!("\n{}", stats.score))
         .block(block)
         .alignment(Alignment::Center)
@@ -220,7 +226,7 @@ fn level_widget(level: &Level) -> Paragraph {
         .title_alignment(Alignment::Center);
     let style = Style::default()
         .add_modifier(Modifier::BOLD)
-        .fg(UiColor::LightCyan);
+        .fg(TuiColor::LightCyan);
     Paragraph::new(format!("\n{}", level.number))
         .block(block)
         .alignment(Alignment::Center)
@@ -235,7 +241,7 @@ fn lines_widget(stats: &Stats) -> Paragraph {
         .title_alignment(Alignment::Center);
     let style = Style::default()
         .add_modifier(Modifier::BOLD)
-        .fg(UiColor::LightRed);
+        .fg(TuiColor::LightGreen);
     Paragraph::new(format!("\n{}", stats.rows_cleared))
         .block(block)
         .alignment(Alignment::Center)
@@ -250,7 +256,7 @@ fn banner_widget(game: &Game) -> Option<Paragraph> {
         .border_type(BorderType::Thick);
     let style = Style::default()
         .add_modifier(Modifier::BOLD)
-        .fg(if game.paused { UiColor::Yellow } else { UiColor::Red });
+        .fg(if game.paused { TuiColor::Yellow } else { TuiColor::Red });
     let content = if game.paused { PAUSED } else { GAME_OVER };
     let paragraph = Paragraph::new(content)
         .alignment(Alignment::Center)
