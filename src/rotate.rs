@@ -1,11 +1,6 @@
 use crate::piece::{Piece, Point, Shape, Orientation};
 use crate::matrix::Matrix;
 
-fn debug_print_matrix(matrix: &Matrix<usize>) {
-    matrix.rows.iter().rev().for_each(|r| println!("{r:?}"));
-    println!("\n");
-}
-
 // From a given piece, return a new piece containing
 // the points after rotation.
 pub fn rotate_clockwise(piece: &Piece) -> Option<Piece> {
@@ -114,27 +109,27 @@ fn extract_points_from_bounding_matrix(
 fn derive_offsets_for_cw(piece: &Piece) -> Option<(usize, usize)> {
     let (lower_left, _) = piece.bounds();
     let offsets = match (piece.shape, piece.orientation) {
-        (Shape::OrangeRicky, Orientation::Two) => (lower_left.x, lower_left.y.checked_add(1)?),
-        (Shape::OrangeRicky, Orientation::Three) => (lower_left.x.checked_add(1)?, lower_left.y.checked_sub(1)?),
+        (Shape::OrangeRicky, Orientation::Two) => (lower_left.x, lower_left.y + 1),
+        (Shape::OrangeRicky, Orientation::Three) => (lower_left.x + 1, lower_left.y.checked_sub(1)?),
         (Shape::OrangeRicky, Orientation::Four) => (lower_left.x.checked_sub(1)?, lower_left.y),
-        (Shape::BlueRicky, Orientation::Two) => (lower_left.x, lower_left.y.checked_add(1)?),
-        (Shape::BlueRicky, Orientation::Three) => (lower_left.x.checked_add(1)?, lower_left.y.checked_sub(1)?),
+        (Shape::BlueRicky, Orientation::Two) => (lower_left.x, lower_left.y + 1),
+        (Shape::BlueRicky, Orientation::Three) => (lower_left.x + 1, lower_left.y.checked_sub(1)?),
         (Shape::BlueRicky, Orientation::Four) => (lower_left.x.checked_sub(1)?, lower_left.y),
-        (Shape::Teewee, Orientation::Two) => (lower_left.x, lower_left.y.checked_add(1)?),
-        (Shape::Teewee, Orientation::Three) => (lower_left.x.checked_add(1)?, lower_left.y.checked_sub(1)?),
+        (Shape::Teewee, Orientation::Two) => (lower_left.x, lower_left.y + 1),
+        (Shape::Teewee, Orientation::Three) => (lower_left.x + 1, lower_left.y.checked_sub(1)?),
         (Shape::Teewee, Orientation::Four) => (lower_left.x.checked_sub(1)?, lower_left.y),
-        (Shape::ClevelandZ, Orientation::One) => (lower_left.x.checked_add(1)?, lower_left.y),
+        (Shape::ClevelandZ, Orientation::One) => (lower_left.x + 1, lower_left.y),
         (Shape::ClevelandZ, Orientation::Two) => (lower_left.x.checked_sub(1)?, lower_left.y),
-        (Shape::ClevelandZ, Orientation::Three) => (lower_left.x.checked_add(1)?, lower_left.y),
+        (Shape::ClevelandZ, Orientation::Three) => (lower_left.x + 1, lower_left.y),
         (Shape::ClevelandZ, Orientation::Four) => (lower_left.x.checked_sub(1)?, lower_left.y),
-        (Shape::RhodeIslandZ, Orientation::One) => (lower_left.x.checked_add(1)?, lower_left.y),
+        (Shape::RhodeIslandZ, Orientation::One) => (lower_left.x + 1, lower_left.y),
         (Shape::RhodeIslandZ, Orientation::Two) => (lower_left.x.checked_sub(1)?, lower_left.y),
-        (Shape::RhodeIslandZ, Orientation::Three) => (lower_left.x.checked_add(1)?, lower_left.y),
+        (Shape::RhodeIslandZ, Orientation::Three) => (lower_left.x + 1, lower_left.y),
         (Shape::RhodeIslandZ, Orientation::Four) => (lower_left.x.checked_sub(1)?, lower_left.y),
-        (Shape::Hero, Orientation::One) => (lower_left.x.checked_add(2)?, lower_left.y.checked_sub(1)?),
-        (Shape::Hero, Orientation::Two) => (lower_left.x.checked_sub(2)?, lower_left.y.checked_add(1)?),
-        (Shape::Hero, Orientation::Three) => (lower_left.x.checked_add(2)?, lower_left.y.checked_sub(1)?),
-        (Shape::Hero, Orientation::Four) => (lower_left.x.checked_sub(2)?, lower_left.y.checked_add(1)?),
+        (Shape::Hero, Orientation::One) => (lower_left.x + 2, lower_left.y.checked_sub(1)?),
+        (Shape::Hero, Orientation::Two) => (lower_left.x.checked_sub(2)?, lower_left.y + 1),
+        (Shape::Hero, Orientation::Three) => (lower_left.x + 2, lower_left.y.checked_sub(1)?),
+        (Shape::Hero, Orientation::Four) => (lower_left.x.checked_sub(2)?, lower_left.y + 1),
         _ => (lower_left.x, lower_left.y)
     };
     Some(offsets)
@@ -145,27 +140,27 @@ fn derive_offsets_for_cw(piece: &Piece) -> Option<(usize, usize)> {
 fn derive_offsets_for_ccw(piece: &Piece) -> Option<(usize, usize)> {
     let (lower_left, _) = piece.bounds();
     let offsets = match (piece.shape, piece.orientation) {
-        (Shape::OrangeRicky, Orientation::One) => (lower_left.x.checked_add(1)?, lower_left.y),
+        (Shape::OrangeRicky, Orientation::One) => (lower_left.x + 1, lower_left.y),
         (Shape::OrangeRicky, Orientation::Three) => (lower_left.x, lower_left.y.checked_sub(1)?),
-        (Shape::OrangeRicky, Orientation::Four) => (lower_left.x.checked_sub(1)?, lower_left.y.checked_add(1)?),
-        (Shape::BlueRicky, Orientation::One) => (lower_left.x.checked_add(1)?, lower_left.y),
+        (Shape::OrangeRicky, Orientation::Four) => (lower_left.x.checked_sub(1)?, lower_left.y + 1),
+        (Shape::BlueRicky, Orientation::One) => (lower_left.x + 1, lower_left.y),
         (Shape::BlueRicky, Orientation::Three) => (lower_left.x, lower_left.y.checked_sub(1)?),
-        (Shape::BlueRicky, Orientation::Four) => (lower_left.x.checked_sub(1)?, lower_left.y.checked_add(1)?),
-        (Shape::Teewee, Orientation::One) => (lower_left.x.checked_add(1)?, lower_left.y),
+        (Shape::BlueRicky, Orientation::Four) => (lower_left.x.checked_sub(1)?, lower_left.y + 1),
+        (Shape::Teewee, Orientation::One) => (lower_left.x + 1, lower_left.y),
         (Shape::Teewee, Orientation::Three) => (lower_left.x, lower_left.y.checked_sub(1)?),
-        (Shape::Teewee, Orientation::Four) => (lower_left.x.checked_sub(1)?, lower_left.y.checked_add(1)?),
-        (Shape::ClevelandZ, Orientation::One) => (lower_left.x.checked_add(1)?, lower_left.y),
+        (Shape::Teewee, Orientation::Four) => (lower_left.x.checked_sub(1)?, lower_left.y + 1),
+        (Shape::ClevelandZ, Orientation::One) => (lower_left.x + 1, lower_left.y),
         (Shape::ClevelandZ, Orientation::Two) => (lower_left.x.checked_sub(1)?, lower_left.y),
-        (Shape::ClevelandZ, Orientation::Three) => (lower_left.x.checked_add(1)?, lower_left.y),
+        (Shape::ClevelandZ, Orientation::Three) => (lower_left.x + 1, lower_left.y),
         (Shape::ClevelandZ, Orientation::Four) => (lower_left.x.checked_sub(1)?, lower_left.y),
-        (Shape::RhodeIslandZ, Orientation::One) => (lower_left.x.checked_add(1)?, lower_left.y),
+        (Shape::RhodeIslandZ, Orientation::One) => (lower_left.x + 1, lower_left.y),
         (Shape::RhodeIslandZ, Orientation::Two) => (lower_left.x.checked_sub(1)?, lower_left.y),
-        (Shape::RhodeIslandZ, Orientation::Three) => (lower_left.x.checked_add(1)?, lower_left.y),
+        (Shape::RhodeIslandZ, Orientation::Three) => (lower_left.x + 1, lower_left.y),
         (Shape::RhodeIslandZ, Orientation::Four) => (lower_left.x.checked_sub(1)?, lower_left.y),
-        (Shape::Hero, Orientation::One) => (lower_left.x.checked_add(2)?, lower_left.y.checked_sub(1)?),
-        (Shape::Hero, Orientation::Two) => (lower_left.x.checked_sub(2)?, lower_left.y.checked_add(1)?),
-        (Shape::Hero, Orientation::Three) => (lower_left.x.checked_add(2)?, lower_left.y.checked_sub(1)?),
-        (Shape::Hero, Orientation::Four) => (lower_left.x.checked_sub(2)?, lower_left.y.checked_add(1)?),
+        (Shape::Hero, Orientation::One) => (lower_left.x + 2, lower_left.y.checked_sub(1)?),
+        (Shape::Hero, Orientation::Two) => (lower_left.x.checked_sub(2)?, lower_left.y + 1),
+        (Shape::Hero, Orientation::Three) => (lower_left.x + 2, lower_left.y.checked_sub(1)?),
+        (Shape::Hero, Orientation::Four) => (lower_left.x.checked_sub(2)?, lower_left.y + 1),
         _ => (lower_left.x, lower_left.y)
     };
     Some(offsets)
@@ -786,10 +781,8 @@ mod test {
         assert_eq!(matrix.get(0, 2), Some(7));
         assert_eq!(matrix.get(1, 2), Some(8));
         assert_eq!(matrix.get(2, 2), Some(9));
-        debug_print_matrix(&matrix);
 
         let transposed = transpose(matrix);
-        debug_print_matrix(&transposed);
 
         assert_eq!(transposed.get(0, 0), Some(9));
         assert_eq!(transposed.get(1, 0), Some(6));

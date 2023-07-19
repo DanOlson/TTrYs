@@ -27,3 +27,9 @@ cargo run
 * Game Config
 * CLI
 * Restart after game over
+
+## Running tests
+
+```shell
+cargo test
+```

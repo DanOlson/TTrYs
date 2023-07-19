@@ -3,10 +3,10 @@ use std::{
     thread,
     time::Duration,
     sync::mpsc,
-    io::{Write, Stdout, stdout, stdin}
+    io::{stdout, stdin}
 };
 use termion::{
-    raw::{IntoRawMode, RawTerminal},
+    raw::IntoRawMode,
     event::Key,
     input::TermRead,
     screen::IntoAlternateScreen,
@@ -60,20 +60,7 @@ fn run_game<B: Backend>(game: &mut Game, terminal: &mut Terminal<B>) -> Result<(
                 game.on_tick();
             }
         }
-        // render(game, &mut stdout);
     }
-}
-
-fn render(game: &Game, out: &mut RawTerminal<Stdout>) {
-    write!(
-        out,
-        "{}{}{}{:?}",
-        termion::clear::All,
-        termion::cursor::Goto(1, 1),
-        termion::cursor::Hide,
-        game.board
-    ).unwrap();
-    out.flush().unwrap();
 }
 
 enum Event {

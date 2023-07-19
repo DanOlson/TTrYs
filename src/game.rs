@@ -139,11 +139,6 @@ impl Game {
         self.level.theme.piece_color(piece)
     }
 
-    // Handle the placement of a piece.
-    //  Clear rows (todo)
-    //  update score (todo)
-    //  next piece becomes current
-    //  select new next piece
     fn piece_placed(&mut self) {
         if self.is_stopped() { return }
 
