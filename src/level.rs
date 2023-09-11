@@ -1,9 +1,9 @@
-use std::collections::VecDeque;
 use crate::{
     scoring::ScoringConfig,
     piece::{Shape, Piece},
 };
 
+const NUM_LEVELS: usize = 10;
 const MAX_TICKS_PER_DROP: usize = 61;
 const THEMES: [Theme; 10] = [
     Theme {
@@ -109,8 +109,10 @@ pub struct Level {
 }
 
 impl Level {
-    pub fn all() -> VecDeque<Self> {
-        (0..10)
+    pub fn level_count() -> usize { NUM_LEVELS }
+
+    pub fn all() -> Vec<Self> {
+        (0..Self::level_count())
             .map(|i| Level::new(i + 1))
             .collect()
     }

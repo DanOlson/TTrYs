@@ -16,8 +16,12 @@ use ratatui::{
     Terminal,
 };
 
-use crate::game::{Game, GameMode};
+use crate::{
+    config::Config,
+    game::Game,
+};
 
+mod config;
 mod matrix;
 mod piece;
 mod game;
@@ -32,15 +36,42 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .into_alternate_screen()?;
     let backend = TermionBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
-
-    let mut game = Game::new(GameMode::AType);
-    run_game(&mut game, &mut terminal)?;
+    let events = setup_events(Duration::from_millis(10));
+    let config = configure(&mut terminal, &events)?;
+    let mut game = Game::new(config);
+    run_game(&mut game, &mut terminal, &events)?;
 
     Ok(())
 }
 
-fn run_game<B: Backend>(game: &mut Game, terminal: &mut Terminal<B>) -> Result<(), Box<dyn std::error::Error>> {
-    let events = setup_events(Duration::from_millis(10));
+fn configure<B: Backend>(
+    terminal: &mut Terminal<B>,
+    events: &mpsc::Receiver<Event>
+) -> Result<Config, Box<dyn std::error::Error>> {
+    let mut config_builder = Config::builder();
+
+    loop {
+        terminal.draw(|f| ui::draw_config(f, &mut config_builder))?;
+
+        if config_builder.is_configured() { return Ok(config_builder.build()) }
+        if let Event::Input(key) = events.recv()? {
+            match key {
+                Key::Char('w') => config_builder.previous_section(),
+                Key::Char('s') => config_builder.next_section(),
+                Key::Char('a') => config_builder.on_left(),
+                Key::Char('d') => config_builder.on_right(),
+                Key::Char('\n') => config_builder.configured(),
+                _ => {}
+            }
+        };
+    }
+}
+
+fn run_game<B: Backend>(
+    game: &mut Game,
+    terminal: &mut Terminal<B>,
+    events: &mpsc::Receiver<Event>
+) -> Result<(), Box<dyn std::error::Error>> {
     loop {
         terminal.draw(|f| ui::draw(f, game))?;
 

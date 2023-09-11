@@ -1,15 +1,10 @@
-use std::collections::VecDeque;
 use crate::{
+    config::{Config, GameMode},
     scoring::RowsCleared,
     piece::{Piece, Point},
     matrix::{Matrix, Cell},
     level::Level
 };
-
-pub enum GameMode {
-    AType,
-    BType,
-}
 
 pub struct Stats {
     pub score: usize,
@@ -43,21 +38,27 @@ pub struct Game {
     pub next_piece: Piece,
     pub stats: Stats,
     pub level: Level,
-    pub levels: VecDeque<Level>,
+    pub levels: Vec<Level>,
     pub wants_to_quit: bool,
     pub paused: bool,
     pub game_over: bool,
 }
 
+impl Default for Game {
+    fn default() -> Game {
+        Game::new(Config::default())
+    }
+}
+
 impl Game {
-    pub fn new(mode: GameMode) -> Self {
-        let board = match mode {
+    pub fn new(config: Config) -> Self {
+        let board = match config.game_mode {
             GameMode::AType => Matrix::empty(),
             GameMode::BType => Matrix::random_partial_fill()
         };
         let origin = Point::new(4, 18);
-        let mut levels = Level::all();
-        let level = levels.pop_front().unwrap();
+        let mut levels: Vec<Level> = Level::all()[config.initial_level..].to_vec();
+        let level = levels.remove(0);
 
         Self {
             board,
@@ -162,10 +163,10 @@ impl Game {
             return
         }
 
-        if let Some(next_level) = self.levels.pop_front() {
-            self.level = next_level;
-        } else {
+        if self.levels.is_empty() {
             self.quit()
+        } else {
+            self.level = self.levels.remove(0);
         }
     }
 }
@@ -179,7 +180,7 @@ mod tests {
     };
 
     fn setup(piece: Piece) -> Game {
-        let mut game = Game::new(GameMode::AType);
+        let mut game = Game::default();
         let mut matrix = Matrix::empty();
         matrix.apply(piece, 14).unwrap();
         game.current_piece = piece;
