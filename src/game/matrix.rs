@@ -1,6 +1,6 @@
 use rand::{thread_rng, Rng};
-use crate::scoring::RowsCleared;
-use crate::piece::{Piece, Point};
+use super::scoring::RowsCleared;
+use super::piece::{Piece, Point};
 
 const WIDTH: usize = 10;
 const HEIGHT: usize = 20;
@@ -274,7 +274,6 @@ impl std::fmt::Display for Matrix<Cell> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::piece::Point;
 
     #[test]
     fn test_set() {

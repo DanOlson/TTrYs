@@ -1,5 +1,5 @@
 use rand::{prelude::thread_rng, seq::SliceRandom};
-use crate::rotate;
+use super::rotate;
 
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Copy)]
 pub struct Point {

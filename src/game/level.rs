@@ -1,6 +1,6 @@
-use crate::{
-    scoring::ScoringConfig,
+use super::{
     piece::{Shape, Piece},
+    scoring::ScoringConfig,
 };
 
 const NUM_LEVELS: usize = 10;

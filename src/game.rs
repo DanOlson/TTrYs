@@ -1,10 +1,14 @@
-use crate::{
-    config::{Config, GameMode},
-    scoring::RowsCleared,
-    piece::{Piece, Point},
-    matrix::{Matrix, Cell},
-    level::Level
-};
+pub mod matrix;
+pub mod piece;
+pub mod level;
+pub mod scoring;
+mod rotate;
+
+use matrix::{Matrix, Cell};
+use piece::{Piece, Point};
+use level::Level;
+use scoring::RowsCleared;
+use crate::config::{Config, GameMode};
 
 pub struct Stats {
     pub score: usize,
@@ -174,10 +178,7 @@ impl Game {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        matrix::{Matrix, Color},
-        piece::{Piece, Point}
-    };
+    use matrix::{Matrix, Color};
 
     fn setup(piece: Piece) -> Game {
         let mut game = Game::default();

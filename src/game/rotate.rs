@@ -1,5 +1,7 @@
-use crate::piece::{Piece, Point, Shape, Orientation};
-use crate::matrix::Matrix;
+use crate::game::{
+    matrix::Matrix,
+    piece::{Piece, Point, Shape, Orientation}
+};
 
 // From a given piece, return a new piece containing
 // the points after rotation.
